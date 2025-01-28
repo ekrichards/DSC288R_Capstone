@@ -172,6 +172,6 @@ cython_debug/
 
 # DVC entries
 .dvc/
-data/archive.zip
+data/raw/archive.zip
 data/extracted
 data/processed

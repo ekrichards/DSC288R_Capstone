@@ -3,14 +3,14 @@ stages:
   extract:
     cmd: python src/extract_zip.py
     deps:
-    - path: data/archive.zip
+    - path: data/raw/archive.zip
       hash: md5
       md5: 4016e7bef6511e574096f03d243429e5
       size: 4006061203
     - path: src/extract_zip.py
       hash: md5
-      md5: 8b7b4c082614295e3ff8584a56f43dc7
-      size: 587
+      md5: 2fcc4541ca568504ab5bc314aee3a6a0
+      size: 591
     outs:
     - path: data/extracted
       hash: md5

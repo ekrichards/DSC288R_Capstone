@@ -1,7 +1,7 @@
 import zipfile
 import os
 
-ZIP_PATH = "data/archive.zip"
+ZIP_PATH = "data/raw/archive.zip"
 EXTRACT_DIR = "data/extracted"
 
 def extract_parquet_files(zip_path, extract_dir):
