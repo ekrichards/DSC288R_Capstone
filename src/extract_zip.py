@@ -1,11 +1,16 @@
-import zipfile
-import os
+import yaml
 
-ZIP_PATH = "data/raw/archive.zip"
-EXTRACT_DIR = "data/extracted"
+# Load configuration
+with open("config/main.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+# Access paths
+ZIP_PATH = config["paths"]["raw_data"]
+EXTRACT_DIR = config["paths"]["extracted_data"]
 
 def extract_parquet_files(zip_path, extract_dir):
     """Extract only Parquet files from a zip archive."""
+    import os, zipfile
     os.makedirs(extract_dir, exist_ok=True)
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         parquet_files = [f for f in zip_ref.namelist() if f.endswith(".parquet")]

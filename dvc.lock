@@ -3,14 +3,18 @@ stages:
   extract:
     cmd: python src/extract_zip.py
     deps:
+    - path: config/main.yaml
+      hash: md5
+      md5: 9d3b16f80a7c37f92ec33a622ab02063
+      size: 130
     - path: data/raw/archive.zip
       hash: md5
       md5: 4016e7bef6511e574096f03d243429e5
       size: 4006061203
     - path: src/extract_zip.py
       hash: md5
-      md5: 2fcc4541ca568504ab5bc314aee3a6a0
-      size: 591
+      md5: 80099dfa4199dd00bd8d5db5c561c350
+      size: 737
     outs:
     - path: data/extracted
       hash: md5
@@ -20,6 +24,10 @@ stages:
   combine:
     cmd: python src/combine_parquet.py
     deps:
+    - path: config/main.yaml
+      hash: md5
+      md5: 9d3b16f80a7c37f92ec33a622ab02063
+      size: 130
     - path: data/extracted
       hash: md5
       md5: 227dd857b90fb1944502d90bb23c02f2.dir
@@ -27,8 +35,8 @@ stages:
       nfiles: 5
     - path: src/combine_parquet.py
       hash: md5
-      md5: f776d5dac52e932ac5cd0bca80d6d5c3
-      size: 792
+      md5: e91e8b1031463e7cab28998d02ed8dcf
+      size: 923
     outs:
     - path: data/processed/combined_data.parquet
       hash: md5

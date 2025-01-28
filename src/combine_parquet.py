@@ -1,11 +1,16 @@
-import os
-import pandas as pd
+import yaml
 
-INPUT_DIR = "data/extracted"
-OUTPUT_FILE = "data/processed/combined_data.parquet"
+# Load configuration
+with open("config/main.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+INPUT_DIR = config["paths"]["extracted_data"]
+OUTPUT_FILE = config["paths"]["processed_data"]
 
 def combine_parquet_files(input_dir, output_file):
     """Combine Parquet files into a single DataFrame."""
+    import os
+    import pandas as pd
     parquet_files = [
         os.path.join(input_dir, f) for f in os.listdir(input_dir) if f.endswith(".parquet")
     ]

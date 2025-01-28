@@ -1,0 +1,4 @@
+paths:
+  raw_data: data/raw/archive.zip
+  extracted_data: data/extracted
+  processed_data: data/processed/combined_data.parquet
