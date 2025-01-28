@@ -31,4 +31,4 @@ help:
 	@echo "  make clean  Clean intermediate and processed data"
 	@echo "  make setup  Install project dependencies"
 	@echo "  make lint   Lint the codebase"
-	@echo "  make test   Run tests"
+	@echo "  make test   Run tests (in progress)"
