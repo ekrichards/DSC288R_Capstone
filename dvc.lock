@@ -1,0 +1,36 @@
+schema: '2.0'
+stages:
+  extract:
+    cmd: python src/extract_zip.py
+    deps:
+    - path: data/archive.zip
+      hash: md5
+      md5: 4016e7bef6511e574096f03d243429e5
+      size: 4006061203
+    - path: src/extract_zip.py
+      hash: md5
+      md5: 8b7b4c082614295e3ff8584a56f43dc7
+      size: 587
+    outs:
+    - path: data/extracted
+      hash: md5
+      md5: 227dd857b90fb1944502d90bb23c02f2.dir
+      size: 1110232077
+      nfiles: 5
+  combine:
+    cmd: python src/combine_parquet.py
+    deps:
+    - path: data/extracted
+      hash: md5
+      md5: 227dd857b90fb1944502d90bb23c02f2.dir
+      size: 1110232077
+      nfiles: 5
+    - path: src/combine_parquet.py
+      hash: md5
+      md5: f776d5dac52e932ac5cd0bca80d6d5c3
+      size: 792
+    outs:
+    - path: data/processed/combined_data.parquet
+      hash: md5
+      md5: 877988f036965fd96caac28777d496b8
+      size: 994535639

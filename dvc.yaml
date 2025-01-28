@@ -1,0 +1,16 @@
+stages:
+  extract:
+    cmd: python src/extract_zip.py
+    deps:
+      - data/archive.zip
+      - src/extract_zip.py
+    outs:
+      - data/extracted
+
+  combine:
+    cmd: python src/combine_parquet.py
+    deps:
+      - data/extracted
+      - src/combine_parquet.py
+    outs:
+      - data/processed/combined_data.parquet
