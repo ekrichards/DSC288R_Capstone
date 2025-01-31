@@ -16,3 +16,11 @@ stages:
       - src/combine_parquet.py
     outs:
       - data/processed/combined_data.parquet
+
+  download_noaa:
+    cmd: python src/download_noaa_data.py
+    deps:
+      - src/download_noaa_data.py
+      - config/main.yaml
+    outs:
+      - data/noaa_raw/
