@@ -1,5 +1,5 @@
 stages:
-  extract:
+  extract_flight:
     cmd: python src/extract_zip.py
     deps:
       - config/main.yaml
@@ -8,19 +8,27 @@ stages:
     outs:
       - data/extracted
 
-  combine:
-    cmd: python src/combine_parquet.py
-    deps:
-      - config/main.yaml
-      - data/extracted
-      - src/combine_parquet.py
-    outs:
-      - data/processed/combined_data.parquet
-
   download_noaa:
     cmd: python src/download_noaa_data.py
     deps:
-      - src/download_noaa_data.py
       - config/main.yaml
+      - src/download_noaa_data.py
     outs:
       - data/noaa_raw/
+
+  extract_noaa:
+    cmd: python src/extract_noaa_data.py
+    deps:
+      - config/main.yaml
+      - src/extract_noaa_data.py
+    outs:
+      - data/noaa_extracted/
+
+  # combine:
+  #   cmd: python src/combine_parquet.py
+  #   deps:
+  #     - config/main.yaml
+  #     - data/extracted
+  #     - src/combine_parquet.py
+  #   outs:
+  #     - data/processed/combined_data.parquet

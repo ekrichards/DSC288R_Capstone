@@ -47,15 +47,53 @@ stages:
     deps:
     - path: config/main.yaml
       hash: md5
-      md5: 2f660313e05ec913ea4b1dba853f3d31
-      size: 358
+      md5: 341620886703c9234a0b146760a4a41c
+      size: 404
     - path: src/download_noaa_data.py
       hash: md5
-      md5: 106584b5a1c393fcb00fbb84ea5b165f
-      size: 2672
+      md5: b41749a0050fe5083091cb2840f1d26f
+      size: 1714
     outs:
     - path: data/noaa_raw/
       hash: md5
-      md5: 61a96c7f5b3de1dd1af948e2f7284c39.dir
-      size: 0
+      md5: daac98ab0db97b04e96a7333831f787f.dir
+      size: 852612594
+      nfiles: 5
+  extract_flight:
+    cmd: python src/extract_zip.py
+    deps:
+    - path: config/main.yaml
+      hash: md5
+      md5: 341620886703c9234a0b146760a4a41c
+      size: 404
+    - path: data/raw/archive.zip
+      hash: md5
+      md5: 4016e7bef6511e574096f03d243429e5
+      size: 4006061203
+    - path: src/extract_zip.py
+      hash: md5
+      md5: 80099dfa4199dd00bd8d5db5c561c350
+      size: 737
+    outs:
+    - path: data/extracted
+      hash: md5
+      md5: 227dd857b90fb1944502d90bb23c02f2.dir
+      size: 1110232077
+      nfiles: 5
+  extract_noaa:
+    cmd: python src/extract_noaa_data.py
+    deps:
+    - path: config/main.yaml
+      hash: md5
+      md5: 341620886703c9234a0b146760a4a41c
+      size: 404
+    - path: src/extract_noaa_data.py
+      hash: md5
+      md5: 3c87ece8fb6bc7d5ecd594a71885f4b0
+      size: 1701
+    outs:
+    - path: data/noaa_extracted/
+      hash: md5
+      md5: 8ff2de06a3329a4d706062b7be54a3df.dir
+      size: 6664616867
       nfiles: 5

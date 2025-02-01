@@ -3,6 +3,7 @@ paths:
   extracted_data: data/extracted
   processed_data: data/processed/combined_data.parquet
   noaa_data_raw: "data/noaa_raw"
+  data_noaa_extracted: "data/noaa_extracted"
 
 noaa_data:
   base_url: "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/"

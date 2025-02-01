@@ -176,3 +176,4 @@ data/raw/archive.zip
 data/extracted
 data/processed
 data/noaa_raw
+data/noaa_extracted
