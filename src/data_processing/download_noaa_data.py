@@ -1,7 +1,6 @@
 import os
 import requests
 import yaml
-from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 
 # List of YAML files to load
@@ -22,7 +21,7 @@ config = load_yaml_files(CONFIG_FILES)
 
 # Extract settings
 BASE_URL = config["noaa_data"]["base_url"]
-YEARS = config["noaa_data"]["years"]
+YEARS = config["overall"]["years"]
 SAVE_DIR = config["paths"]["raw_noaa_data"]
 
 # Ensure save directory exists
@@ -47,7 +46,6 @@ def download_file(year):
             unit="B",
             unit_scale=True,
             unit_divisor=1024,
-            position=YEARS.index(year),
             leave=True
         ) as bar:
             for chunk in response.iter_content(chunk_size=1024):
@@ -61,7 +59,8 @@ def download_file(year):
         tqdm.write(f"Error downloading {year}: {e}")
 
 if __name__ == "__main__":
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        executor.map(download_file, YEARS)
+    # Sequentially download each year's file
+    for year in YEARS:
+        download_file(year)
 
     tqdm.write("All downloads completed!")

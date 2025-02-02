@@ -20,16 +20,16 @@ def load_yaml_files(file_paths):
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract settings from YAML
-RAW_DIR = config["paths"]["extracted_noaa_data"]                    # Directory with raw NOAA data
-CLEAN_DIR = config["paths"]["processed_noaa_data"]                  # Directory to save cleaned data
-YEARS = config["noaa_data"]["years"]                                # List of years to process
+EXTRACTED_DIR = config["paths"]["extracted_noaa_data"]                    # Directory with raw NOAA data
+PROCESSED_DIR = config["paths"]["processed_noaa_data"]                  # Directory to save cleaned data
+YEARS = config["overall"]["years"]                                  # List of years to process
 CORE_ELEMENTS = set(config["noaa_data"]["elements"])                # Elements to keep
 ZERO_OUT_ELEMENTS = set(config["noaa_data"]["zero_out_elements"])   # Elements to replace NaN with 0
 STATION_KEY_PATH = config["paths"]["airport_station_data"]          # Path to station-airport key CSV
 DELETE_CSV = config["noaa_data"]["delete_csv"]                      # Delete raw NOAA CSVs after processing?
 
 # Ensure save directory exists
-os.makedirs(CLEAN_DIR, exist_ok=True)
+os.makedirs(PROCESSED_DIR, exist_ok=True)
 
 # Load station key and create a mapping (STATION → AIRPORT_CODE)
 station_key_df = pd.read_csv(STATION_KEY_PATH, usecols=["Closest_Station", "Airport"])
@@ -38,7 +38,7 @@ station_mapping = dict(zip(station_key_df["Closest_Station"].astype(str), statio
 
 def clean_noaa_file(file_path, year):
     """Reads, cleans, and transforms a NOAA GHCN file, filtering first, then replacing stations with airport codes."""
-    save_path = os.path.join(CLEAN_DIR, f"noaa_{year}_clean.parquet")
+    save_path = os.path.join(PROCESSED_DIR, f"processed_noaa_{year}.parquet")
 
     # Read only needed columns
     df = pd.read_csv(
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     tqdm.write(f"Cleaning NOAA data for years: {YEARS}")
     
     for year in tqdm(YEARS, desc="Processing NOAA files"):
-        raw_file_path = os.path.join(RAW_DIR, f"{year}.csv")
+        raw_file_path = os.path.join(EXTRACTED_DIR, f"extracted_noaa_{year}.csv")
 
         if os.path.exists(raw_file_path):
             save_path = clean_noaa_file(raw_file_path, year)

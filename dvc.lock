@@ -51,8 +51,8 @@ stages:
       size: 446
     - path: config/process/base.yaml
       hash: md5
-      md5: 641dc277b493b18375a05df8338ac23c
-      size: 316
+      md5: 4afdbd0e72febbaf2768eef6c71d02ad
+      size: 1626
     - path: src/data_processing/download_noaa_data.py
       hash: md5
       md5: 7065bda63bb2f020bb34886902c9c698
@@ -93,8 +93,8 @@ stages:
       size: 446
     - path: config/process/base.yaml
       hash: md5
-      md5: 641dc277b493b18375a05df8338ac23c
-      size: 316
+      md5: 4afdbd0e72febbaf2768eef6c71d02ad
+      size: 1626
     - path: src/data_processing/extract_noaa_data.py
       hash: md5
       md5: df00f4b3b13a324d5728dd20654da433
@@ -114,15 +114,36 @@ stages:
       size: 446
     - path: config/process/base.yaml
       hash: md5
-      md5: 641dc277b493b18375a05df8338ac23c
-      size: 316
+      md5: 4afdbd0e72febbaf2768eef6c71d02ad
+      size: 1626
     - path: src/data_processing/process_noaa_data.py
       hash: md5
-      md5: 5cedd7bb930db2eca171bbd6e87d73ed
-      size: 3951
+      md5: f4d7d013299301abbde80636cb13684f
+      size: 4391
     outs:
     - path: data/processed/processed_noaa/
       hash: md5
-      md5: 04aec6c8b181adb34cf5973ef27b3403.dir
-      size: 1836545
+      md5: e72ca9214948243b8df318f956cc4d36.dir
+      size: 1821401
+      nfiles: 5
+  process_flight:
+    cmd: python src/data_processing/process_flight_data.py
+    deps:
+    - path: config/paths.yaml
+      hash: md5
+      md5: 405011d2fdbacacb51742b121a6c6b47
+      size: 446
+    - path: config/process/base.yaml
+      hash: md5
+      md5: 4afdbd0e72febbaf2768eef6c71d02ad
+      size: 1626
+    - path: src/data_processing/process_flight_data.py
+      hash: md5
+      md5: fbe1025146b8e975e63b903f893f669e
+      size: 2264
+    outs:
+    - path: data/processed/processed_flight/
+      hash: md5
+      md5: 04f09b8875eb9501a0ef0461e988907c.dir
+      size: 472507976
       nfiles: 5
