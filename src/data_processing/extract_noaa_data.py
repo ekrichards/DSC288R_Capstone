@@ -25,9 +25,7 @@ config = load_yaml_files(CONFIG_FILES)
 YEARS = config["noaa_data"]["years"]
 SOURCE_DIR = config["paths"]["raw_noaa_data"]
 SAVE_DIR = config["paths"]["extracted_noaa_data"]
-
-# Delete .gz file after extraction?
-DELETE_GZ = config["noaa_data"]["delete_gz"]
+DELETE_GZ = config["noaa_data"]["delete_gz"] # Delete .gz file after extraction?
 
 # Ensure save directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)

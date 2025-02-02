@@ -21,9 +21,19 @@ stages:
     cmd: python src/data_processing/extract_noaa_data.py
     deps:
       - config/paths.yaml
+      - config/process/base.yaml
       - src/data_processing/extract_noaa_data.py
     outs:
       - data/extracted/extracted_noaa/
+
+  process_noaa:
+    cmd: python src/data_processing/process_noaa_data.py
+    deps:
+      - config/paths.yaml
+      - config/process/base.yaml
+      - src/data_processing/process_noaa_data.py
+    outs:
+      - data/processed/processed_noaa/
 
   # combine:
   #   cmd: python src/combine_parquet.py

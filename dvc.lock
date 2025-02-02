@@ -47,12 +47,12 @@ stages:
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 59d00f08a212da5d4714eb8d4cc3e03c
-      size: 262
+      md5: 405011d2fdbacacb51742b121a6c6b47
+      size: 446
     - path: config/process/base.yaml
       hash: md5
-      md5: 1151127f2b7189704152e7f5ff9f0048
-      size: 191
+      md5: 641dc277b493b18375a05df8338ac23c
+      size: 316
     - path: src/data_processing/download_noaa_data.py
       hash: md5
       md5: 7065bda63bb2f020bb34886902c9c698
@@ -68,8 +68,8 @@ stages:
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 59d00f08a212da5d4714eb8d4cc3e03c
-      size: 262
+      md5: 405011d2fdbacacb51742b121a6c6b47
+      size: 446
     - path: data/raw/raw_flight/archive.zip
       hash: md5
       md5: 4016e7bef6511e574096f03d243429e5
@@ -89,15 +89,40 @@ stages:
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 59d00f08a212da5d4714eb8d4cc3e03c
-      size: 262
+      md5: 405011d2fdbacacb51742b121a6c6b47
+      size: 446
+    - path: config/process/base.yaml
+      hash: md5
+      md5: 641dc277b493b18375a05df8338ac23c
+      size: 316
     - path: src/data_processing/extract_noaa_data.py
       hash: md5
-      md5: 234d1ac2e3f491d0eca999d3c3c425d5
-      size: 2171
+      md5: df00f4b3b13a324d5728dd20654da433
+      size: 2168
     outs:
     - path: data/extracted/extracted_noaa/
       hash: md5
       md5: 8ff2de06a3329a4d706062b7be54a3df.dir
       size: 6664616867
+      nfiles: 5
+  process_noaa:
+    cmd: python src/data_processing/process_noaa_data.py
+    deps:
+    - path: config/paths.yaml
+      hash: md5
+      md5: 405011d2fdbacacb51742b121a6c6b47
+      size: 446
+    - path: config/process/base.yaml
+      hash: md5
+      md5: 641dc277b493b18375a05df8338ac23c
+      size: 316
+    - path: src/data_processing/process_noaa_data.py
+      hash: md5
+      md5: 5cedd7bb930db2eca171bbd6e87d73ed
+      size: 3951
+    outs:
+    - path: data/processed/processed_noaa/
+      hash: md5
+      md5: 04aec6c8b181adb34cf5973ef27b3403.dir
+      size: 1836545
       nfiles: 5
