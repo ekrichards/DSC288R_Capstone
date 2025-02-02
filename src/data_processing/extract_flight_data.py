@@ -1,12 +1,12 @@
 import yaml
 
 # Load configuration
-with open("config/main.yaml", "r") as f:
+with open("config/paths.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 # Access paths
-ZIP_PATH = config["paths"]["raw_data"]
-EXTRACT_DIR = config["paths"]["extracted_data"]
+ZIP_PATH = config["paths"]["raw_flight_data"]
+EXTRACT_DIR = config["paths"]["extracted_flight_data"]
 
 def extract_parquet_files(zip_path, extract_dir):
     """Extract only Parquet files from a zip archive."""

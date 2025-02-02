@@ -4,15 +4,26 @@ import yaml
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 
-CONFIG_PATH = "config/main.yaml"
+# List of YAML files to load
+CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files here
 
-with open(CONFIG_PATH, "r") as file:
-    config = yaml.safe_load(file)
+def load_yaml_files(file_paths):
+    """Load multiple YAML files and merge their content."""
+    merged_config = {}
+    for path in file_paths:
+        with open(path, "r") as file:
+            config = yaml.safe_load(file)
+            if config:
+                merged_config.update(config)  # Merge dictionaries (override duplicate keys)
+    return merged_config
+
+# Load and merge configurations
+config = load_yaml_files(CONFIG_FILES)
 
 # Extract settings
 BASE_URL = config["noaa_data"]["base_url"]
 YEARS = config["noaa_data"]["years"]
-SAVE_DIR = config["paths"]["noaa_data_raw"]
+SAVE_DIR = config["paths"]["raw_noaa_data"]
 
 # Ensure save directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)

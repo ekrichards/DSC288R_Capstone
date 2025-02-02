@@ -1,0 +1,4 @@
+noaa_data:
+  base_url: "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/"
+  years: [2018, 2019, 2020, 2021, 2022]
+  delete_gz: false  # Set to false if you want to keep the .gz files

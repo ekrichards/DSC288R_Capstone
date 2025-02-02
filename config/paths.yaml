@@ -1,0 +1,6 @@
+paths:
+  raw_flight_data: data/raw/raw_flight/archive.zip
+  raw_noaa_data: data/raw/raw_noaa
+  extracted_flight_data: data/extracted/extracted_flight
+  extracted_noaa_data: data/extracted/extracted_noaa
+  processed_data: data/processed/combined_data.parquet

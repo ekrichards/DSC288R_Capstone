@@ -4,10 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 
 # Load configuration
-with open("config/main.yaml", "r") as f:
+with open("config/paths.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-INPUT_DIR = config["paths"]["extracted_data"]
+INPUT_DIR = config["paths"]["extracted_flight_data"]
 OUTPUT_FILE = config["paths"]["processed_data"]
 
 def combine_parquet_files(input_dir, output_file):

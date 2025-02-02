@@ -172,8 +172,7 @@ cython_debug/
 
 # DVC entries
 .dvc/
-data/raw/archive.zip
+data/raw/raw_noaa
+data/raw/raw_flight/archive.zip
 data/extracted
 data/processed
-data/noaa_raw
-data/noaa_extracted
