@@ -2,5 +2,6 @@ noaa_data:
   base_url: "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/"
   years: [2018, 2019, 2020, 2021, 2022]
   elements: ["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]
+  zero_out_elements: ["PRCP", "SNOW", "SNWD"]
   delete_gz: false  # Set to false if you want to keep the .gz files
   delete_csv: false # Set to false if you want to keep the .csv files

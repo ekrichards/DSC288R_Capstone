@@ -20,12 +20,13 @@ def load_yaml_files(file_paths):
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract settings from YAML
-RAW_DIR = config["paths"]["extracted_noaa_data"]      # Directory with raw NOAA data
-CLEAN_DIR = config["paths"]["processed_noaa_data"]   # Directory to save cleaned data
-YEARS = config["noaa_data"]["years"]           # List of years to process
-CORE_ELEMENTS = set(config["noaa_data"]["elements"])  # Elements to keep
-STATION_KEY_PATH = config["paths"]["airport_station_data"]  # Path to station-airport key CSV
-DELETE_CSV = config["noaa_data"]["delete_csv"]  # Delete raw NOAA CSVs after processing?
+RAW_DIR = config["paths"]["extracted_noaa_data"]                    # Directory with raw NOAA data
+CLEAN_DIR = config["paths"]["processed_noaa_data"]                  # Directory to save cleaned data
+YEARS = config["noaa_data"]["years"]                                # List of years to process
+CORE_ELEMENTS = set(config["noaa_data"]["elements"])                # Elements to keep
+ZERO_OUT_ELEMENTS = set(config["noaa_data"]["zero_out_elements"])   # Elements to replace NaN with 0
+STATION_KEY_PATH = config["paths"]["airport_station_data"]          # Path to station-airport key CSV
+DELETE_CSV = config["noaa_data"]["delete_csv"]                      # Delete raw NOAA CSVs after processing?
 
 # Ensure save directory exists
 os.makedirs(CLEAN_DIR, exist_ok=True)
@@ -70,6 +71,11 @@ def clean_noaa_file(file_path, year):
     for col in CORE_ELEMENTS:
         if col not in df.columns:
             df[col] = pd.NA
+
+    # Replace missing values for elements in zero_out_elements list with 0
+    for col in ZERO_OUT_ELEMENTS:
+        if col in df.columns:
+            df[col].fillna(0, inplace=True)
 
     # Save to Parquet for efficiency
     df.to_parquet(save_path, index=False)
