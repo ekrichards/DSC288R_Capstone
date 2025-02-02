@@ -47,103 +47,103 @@ stages:
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 405011d2fdbacacb51742b121a6c6b47
-      size: 446
+      md5: 5a63ab78f8ac13b950a1d735bef31dbc
+      size: 532
     - path: config/process/base.yaml
       hash: md5
-      md5: 4afdbd0e72febbaf2768eef6c71d02ad
-      size: 1626
+      md5: b5d802e4e1bb02e514f86d980deab758
+      size: 1696
     - path: src/data_processing/download_noaa_data.py
       hash: md5
-      md5: 7065bda63bb2f020bb34886902c9c698
-      size: 2184
+      md5: bc62467e91330f16dab93fa03336dda2
+      size: 2086
     outs:
     - path: data/raw/raw_noaa/
       hash: md5
-      md5: daac98ab0db97b04e96a7333831f787f.dir
-      size: 852612594
-      nfiles: 5
+      md5: f16e0f05d99dee50a94333b01d8651a0.dir
+      size: 169648009
+      nfiles: 1
   extract_flight:
     cmd: python src/data_processing/extract_flight_data.py
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 405011d2fdbacacb51742b121a6c6b47
-      size: 446
+      md5: 5a63ab78f8ac13b950a1d735bef31dbc
+      size: 532
     - path: data/raw/raw_flight/archive.zip
       hash: md5
       md5: 4016e7bef6511e574096f03d243429e5
       size: 4006061203
     - path: src/data_processing/extract_flight_data.py
       hash: md5
-      md5: 711e88fc01e18c3737296bf187a91089
-      size: 752
+      md5: a56859d6da3074bcd904e584fd45f769
+      size: 4077
     outs:
     - path: data/extracted/extracted_flight/
       hash: md5
-      md5: 227dd857b90fb1944502d90bb23c02f2.dir
-      size: 1110232077
-      nfiles: 5
+      md5: 6c0e0919e6023bc77f80ab5c1f8d6108.dir
+      size: 717582753
+      nfiles: 3
   extract_noaa:
     cmd: python src/data_processing/extract_noaa_data.py
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 405011d2fdbacacb51742b121a6c6b47
-      size: 446
+      md5: 5a63ab78f8ac13b950a1d735bef31dbc
+      size: 532
     - path: config/process/base.yaml
       hash: md5
-      md5: 4afdbd0e72febbaf2768eef6c71d02ad
-      size: 1626
+      md5: af16f4c0e3d809b80db0aec456027397
+      size: 1708
     - path: src/data_processing/extract_noaa_data.py
       hash: md5
-      md5: df00f4b3b13a324d5728dd20654da433
-      size: 2168
+      md5: d867a855022c2e81c58fbf8917559ddf
+      size: 2181
     outs:
     - path: data/extracted/extracted_noaa/
       hash: md5
-      md5: 8ff2de06a3329a4d706062b7be54a3df.dir
-      size: 6664616867
-      nfiles: 5
+      md5: 4b998403e8464db890413493778341fd.dir
+      size: 3947800571
+      nfiles: 3
   process_noaa:
     cmd: python src/data_processing/process_noaa_data.py
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 405011d2fdbacacb51742b121a6c6b47
-      size: 446
+      md5: 5a63ab78f8ac13b950a1d735bef31dbc
+      size: 532
     - path: config/process/base.yaml
       hash: md5
-      md5: 4afdbd0e72febbaf2768eef6c71d02ad
-      size: 1626
+      md5: af16f4c0e3d809b80db0aec456027397
+      size: 1708
     - path: src/data_processing/process_noaa_data.py
       hash: md5
-      md5: f4d7d013299301abbde80636cb13684f
-      size: 4391
+      md5: 19b28d6c097a919d9d573b9cd19e8a00
+      size: 4434
     outs:
     - path: data/processed/processed_noaa/
       hash: md5
-      md5: e72ca9214948243b8df318f956cc4d36.dir
-      size: 1821401
-      nfiles: 5
+      md5: c8e55b781803c6eea752b29b9bcb8bf7.dir
+      size: 1065615
+      nfiles: 3
   process_flight:
     cmd: python src/data_processing/process_flight_data.py
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 405011d2fdbacacb51742b121a6c6b47
-      size: 446
+      md5: 5a63ab78f8ac13b950a1d735bef31dbc
+      size: 532
     - path: config/process/base.yaml
       hash: md5
-      md5: 4afdbd0e72febbaf2768eef6c71d02ad
-      size: 1626
+      md5: b5d802e4e1bb02e514f86d980deab758
+      size: 1696
     - path: src/data_processing/process_flight_data.py
       hash: md5
-      md5: fbe1025146b8e975e63b903f893f669e
-      size: 2264
+      md5: cee581b489122cae6c264d00071682cf
+      size: 6960
     outs:
     - path: data/processed/processed_flight/
       hash: md5
-      md5: 04f09b8875eb9501a0ef0461e988907c.dir
-      size: 472507976
-      nfiles: 5
+      md5: 9e6152cc53af5407ea704edf0c0e221e.dir
+      size: 317543716
+      nfiles: 3
