@@ -38,7 +38,7 @@ station_mapping = dict(zip(station_key_df["Closest_Station"].astype(str), statio
 
 def clean_noaa_file(file_path, year):
     """Reads, cleans, and transforms a NOAA GHCN file, filtering first, then replacing stations with airport codes."""
-    save_path = os.path.join(CLEAN_DIR, f"{year}_clean.parquet")
+    save_path = os.path.join(CLEAN_DIR, f"noaa_{year}_clean.parquet")
 
     # Read only needed columns
     df = pd.read_csv(
@@ -58,8 +58,9 @@ def clean_noaa_file(file_path, year):
     # Replace station IDs with corresponding airport codes
     df["STATION"] = df["STATION"].map(station_mapping)
 
-    # Convert date format from YYYYMMDD → YYYY-MM-DD
+    # Convert date format from YYYYMMDD to YYYY-MM-DD
     df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
+    df["DATE"] = df["DATE"].astype('datetime64[s]')
 
     # Pivot table to make ELEMENT values into separate columns
     df = df.pivot_table(index=["STATION", "DATE"], columns="ELEMENT", values="VALUE", aggfunc="first")
