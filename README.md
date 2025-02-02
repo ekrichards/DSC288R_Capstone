@@ -31,3 +31,4 @@ and activate it
         └── archive.zip
 ```
 6. run ```make data``` in the terminal
+milestone 2
