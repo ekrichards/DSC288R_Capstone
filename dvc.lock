@@ -81,9 +81,9 @@ stages:
     outs:
     - path: data/extracted/extracted_flight/
       hash: md5
-      md5: 6c0e0919e6023bc77f80ab5c1f8d6108.dir
-      size: 717582753
-      nfiles: 3
+      md5: ef88c565ea9e02b3e31e8698851b63a2.dir
+      size: 1110232077
+      nfiles: 5
   extract_noaa:
     cmd: python src/data_processing/extract_noaa_data.py
     deps:
@@ -93,8 +93,8 @@ stages:
       size: 532
     - path: config/process/base.yaml
       hash: md5
-      md5: af16f4c0e3d809b80db0aec456027397
-      size: 1708
+      md5: 9c8f09961923f76b5967c06e7565fe7e
+      size: 1720
     - path: src/data_processing/extract_noaa_data.py
       hash: md5
       md5: d867a855022c2e81c58fbf8917559ddf
@@ -102,9 +102,9 @@ stages:
     outs:
     - path: data/extracted/extracted_noaa/
       hash: md5
-      md5: 4b998403e8464db890413493778341fd.dir
-      size: 3947800571
-      nfiles: 3
+      md5: c95fa405023e5ef77dd9c467799f541a.dir
+      size: 6664616867
+      nfiles: 5
   process_noaa:
     cmd: python src/data_processing/process_noaa_data.py
     deps:
@@ -114,8 +114,8 @@ stages:
       size: 532
     - path: config/process/base.yaml
       hash: md5
-      md5: af16f4c0e3d809b80db0aec456027397
-      size: 1708
+      md5: 9c8f09961923f76b5967c06e7565fe7e
+      size: 1720
     - path: src/data_processing/process_noaa_data.py
       hash: md5
       md5: 19b28d6c097a919d9d573b9cd19e8a00
@@ -123,9 +123,9 @@ stages:
     outs:
     - path: data/processed/processed_noaa/
       hash: md5
-      md5: c8e55b781803c6eea752b29b9bcb8bf7.dir
-      size: 1065615
-      nfiles: 3
+      md5: 83c4430f7ba94a7fb14575976e14b418.dir
+      size: 4187931
+      nfiles: 5
   process_flight:
     cmd: python src/data_processing/process_flight_data.py
     deps:
@@ -144,6 +144,27 @@ stages:
     outs:
     - path: data/processed/processed_flight/
       hash: md5
-      md5: bbdbf872e01dcfd55d846d6a81d608e8.dir
-      size: 689876465
-      nfiles: 3
+      md5: b57548fb0db2810ac54d4785ac54e8ed.dir
+      size: 1072674456
+      nfiles: 5
+  final:
+    cmd: python src/data_processing/final_data.py
+    deps:
+    - path: config/paths.yaml
+      hash: md5
+      md5: 5a63ab78f8ac13b950a1d735bef31dbc
+      size: 532
+    - path: config/process/base.yaml
+      hash: md5
+      md5: 9c8f09961923f76b5967c06e7565fe7e
+      size: 1720
+    - path: src/data_processing/final_data.py
+      hash: md5
+      md5: 5119aab9f8092b7aa5c7ec046cb029d1
+      size: 4365
+    outs:
+    - path: data/final/
+      hash: md5
+      md5: 2d11e75ada31e89d994d6178c7d4d975.dir
+      size: 2827462231
+      nfiles: 6
