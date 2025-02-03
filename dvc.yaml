@@ -45,10 +45,10 @@ stages:
       - data/processed/processed_noaa/
 
   # combine:
-  #   cmd: python src/combine_parquet.py
+  #   cmd: python src/data_processing/combine_parquet.py
   #   deps:
-  #     - config/main.yaml
-  #     - data/extracted
-  #     - src/combine_parquet.py
+  #     - config/paths.yaml
+  #     - data//extracted/extracted_flight
+  #     - src/data_processing/combine_parquet.py
   #   outs:
   #     - data/processed/combined_data.parquet
