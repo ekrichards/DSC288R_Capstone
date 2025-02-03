@@ -22,7 +22,7 @@ def load_yaml_files(file_paths):
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract settings
-YEARS = config["noaa_data"]["years"]
+YEARS = config["overall"]["years"]
 SOURCE_DIR = config["paths"]["raw_noaa_data"]
 SAVE_DIR = config["paths"]["extracted_noaa_data"]
 DELETE_GZ = config["noaa_data"]["delete_gz"] # Delete .gz file after extraction?
@@ -33,7 +33,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 def extract_file(year):
     """Extract a GHCN yearly dataset from .gz, optionally delete the .gz."""
     gz_filename = f"{year}.csv.gz"
-    csv_filename = f"{year}.csv"
+    csv_filename = f"extracted_noaa_{year}.csv"
     gz_path = os.path.join(SOURCE_DIR, gz_filename)
     csv_path = os.path.join(SAVE_DIR, csv_filename)
 

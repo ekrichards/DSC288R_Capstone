@@ -6,4 +6,6 @@ paths:
   extracted_noaa_data: data/extracted/extracted_noaa
   processed_flight_data: data/processed/processed_flight
   processed_noaa_data: data/processed/processed_noaa
-  combined_parquet_file: data/processed/combined_data.parquet
+  final_by_year: data/final/by_year
+  final_combined: data/final/final_data.parquet
+  combined_parquet_file: data/extracted/combined_data.parquet

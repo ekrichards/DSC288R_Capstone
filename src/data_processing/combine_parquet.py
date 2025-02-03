@@ -8,7 +8,7 @@ with open("config/paths.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 INPUT_DIR = config["paths"]["extracted_flight_data"]
-OUTPUT_FILE = config["paths"]["processed_data"]
+OUTPUT_FILE = config["paths"]["combined_parquet_file"]
 
 def combine_parquet_files(input_dir, output_file):
     """Combine Parquet files into a single DataFrame with a progress bar."""

@@ -1,7 +1,58 @@
+overall:
+  years: [2018, 2019, 2020, 2021, 2022] # Years of data we are collecting
+
 noaa_data:
-  base_url: "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/"
-  years: [2018, 2019, 2020, 2021, 2022]
-  elements: ["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]
-  zero_out_elements: ["PRCP", "SNOW", "SNWD"]
-  delete_gz: false  # Set to false if you want to keep the .gz files
-  delete_csv: false # Set to false if you want to keep the .csv files
+  base_url: "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/"    # Base location of NOAA weather data
+  elements: ["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]                    # Elements we want from the weather data
+  zero_out_elements: ["PRCP", "SNOW", "SNWD"]                           # Elements we are replacing NaN values with 0
+  delete_gz: false                                                      # Set to false if you want to keep the .gz files
+  delete_csv: false                                                     # Set to false if you want to keep the .csv files
+
+flight_data:
+  delete_pq: false   # Set to false if you want to keep the extracted parquet files
+  keep_columns:       # Columns to retain from flight data
+    - FlightDate
+    - DayOfWeek
+    - Month
+    - Airline
+    - Origin
+    - Dest
+    - Cancelled
+    - Diverted
+    - DivAirportLandings
+    - CRSDepTime
+    - DepTime
+    - DepDelay
+    - DepDel15
+    - CRSArrTime
+    - ArrTime
+    - ArrDelay
+    - ArrDel15
+    - AirTime
+    - Distance
+    - TaxiOut
+    - WheelsOff
+    - WheelsOn
+    - TaxiIn
+
+final_data:
+  delete_processed: false # Delete individual year files after merging?
+  delete_merged: false # Delete individual year files after merging?
+
+dtype_mapping:  
+  DayOfWeek: int8  
+  Month: int8  
+  DivAirportLandings: int8  
+  CRSDepTime: int16  
+  DepTime: int16  
+  DepDelay: int16  
+  CRSArrTime: int16  
+  ArrTime: int16  
+  ArrDelay: int16  
+  AirTime: float32  
+  Distance: float32  
+  TaxiOut: int16  
+  WheelsOff: int16  
+  WheelsOn: int16  
+  TaxiIn: int16
+
