@@ -59,3 +59,47 @@ def extract_parquet_files(zip_path, extract_dir, years):
 
 if __name__ == "__main__":
     extract_parquet_files(ZIP_PATH, EXTRACT_DIR, FLIGHT_YEARS)
+
+
+# import yaml
+
+# # List of YAML files to load
+# CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files here
+
+# def load_yaml_files(file_paths):
+#     """Load multiple YAML files and merge their content."""
+#     merged_config = {}
+#     for path in file_paths:
+#         with open(path, "r") as file:
+#             config = yaml.safe_load(file)
+#             if config:
+#                 merged_config.update(config)  # Merge dictionaries (override duplicate keys)
+#     return merged_config
+
+# # Load and merge configurations
+# config = load_yaml_files(CONFIG_FILES)
+
+# # Access paths
+# ZIP_PATH = config["paths"]["raw_flight_data"]
+# EXTRACT_DIR = config["paths"]["extracted_flight_data"]
+# FLIGHT_YEARS = config["overall"]["years"]
+
+# def extract_parquet_files(zip_path, extract_dir, years):
+#     """Extract only Parquet files that include any of the specified years in the filename from a zip archive."""
+#     import os
+#     import zipfile
+    
+#     os.makedirs(extract_dir, exist_ok=True)
+#     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+#         # Filter for parquet files that contain at least one of the specified years
+#         parquet_files = [
+#             f for f in zip_ref.namelist() 
+#             if f.endswith(".parquet") and any(str(y) in f for y in years)
+#         ]
+        
+#         for file in parquet_files:
+#             zip_ref.extract(file, extract_dir)
+#             print(f"Extracted: {file}")
+
+# if __name__ == "__main__":
+#     extract_parquet_files(ZIP_PATH, EXTRACT_DIR, FLIGHT_YEARS)

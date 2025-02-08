@@ -123,8 +123,8 @@ stages:
     outs:
     - path: data/processed/processed_noaa/
       hash: md5
-      md5: 568f7b43ff126d01fd43072ada887e9a.dir
-      size: 1821401
+      md5: 83c4430f7ba94a7fb14575976e14b418.dir
+      size: 4187931
       nfiles: 5
   process_flight:
     cmd: python src/data_processing/process_flight_data.py
@@ -144,15 +144,15 @@ stages:
     outs:
     - path: data/processed/processed_flight/
       hash: md5
-      md5: 27f62b80e52ca8c207e5f47a66a6c3dd.dir
-      size: 493617099
+      md5: b57548fb0db2810ac54d4785ac54e8ed.dir
+      size: 1072674456
       nfiles: 5
-  final_data:
+  final:
     cmd: python src/data_processing/final_data.py
     deps:
     - path: config/paths.yaml
       hash: md5
-      md5: 7953479ce7aa09f8b858b43684283107
+      md5: 5a63ab78f8ac13b950a1d735bef31dbc
       size: 532
     - path: config/process/base.yaml
       hash: md5
@@ -165,6 +165,6 @@ stages:
     outs:
     - path: data/final/
       hash: md5
-      md5: fba36562ff450bab8312dbc71fb5472c.dir
-      size: 1296525082
+      md5: 2d11e75ada31e89d994d6178c7d4d975.dir
+      size: 2827462231
       nfiles: 6

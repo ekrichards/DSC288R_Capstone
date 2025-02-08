@@ -20,8 +20,8 @@ def load_yaml_files(file_paths):
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract settings from YAML
-EXTRACTED_DIR = config["paths"]["extracted_noaa_data"]              # Directory with raw NOAA data
-PROCESSED_DIR = config["paths"]["processed_noaa_data"]              # Directory to save cleaned data
+EXTRACTED_DIR = config["paths"]["extracted_noaa_data"]                    # Directory with raw NOAA data
+PROCESSED_DIR = config["paths"]["processed_noaa_data"]                  # Directory to save cleaned data
 YEARS = config["overall"]["years"]                                  # List of years to process
 CORE_ELEMENTS = set(config["noaa_data"]["elements"])                # Elements to keep
 ZERO_OUT_ELEMENTS = set(config["noaa_data"]["zero_out_elements"])   # Elements to replace NaN with 0

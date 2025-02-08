@@ -8,4 +8,4 @@ paths:
   processed_noaa_data: data/processed/processed_noaa
   final_by_year: data/final/by_year
   final_combined: data/final/final_data.parquet
-  combined_parquet_file: data/extracted/combined_data.parquet
+  combined_parquet_file: data/processed/combined_data.parquet
