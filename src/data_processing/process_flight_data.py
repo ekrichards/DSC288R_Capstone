@@ -91,7 +91,8 @@ def clean_flight_file(file_path):
         ]
         categories = ["Early Morning", "Morning", "Afternoon", "Evening"]
         df["TimeofDay"] = np.select(conditions, categories, default="Unknown")
-    
+
+    # d) Added Random Under Sampling
     if "DepDel15" in df.columns:
         # Separate delayed and non-delayed flights
         delayed_flights = df[df['DepDel15'] == 1]
