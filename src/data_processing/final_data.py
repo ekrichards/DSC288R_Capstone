@@ -77,6 +77,8 @@ def merge_flight_weather(year):
     # Close DuckDB connection
     con.close()
 
+    # Add code here
+
     # Save merged dataset
     merged_file = os.path.join(os.path.dirname(FINAL_FILE), f"final_{year}.parquet")
     merged_df.to_parquet(merged_file, index=False)
