@@ -23,12 +23,13 @@ Flight status prediction based on historical flight data.
 2. Create a virtual environment (I recommend using [anaconda](https://www.anaconda.com/download)) 
 and activate it
 3. Run ```pip install -r requirements.txt``` in your terminal
-4. Download the [Flight Status Prediction](https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022?select=Combined_Flights_2018.csv) dataset from Kaggle and place the archive.zip file inside ```data\raw```
+4. Run ```dvc init```
+5. Download the [Flight Status Prediction](https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022?select=Combined_Flights_2018.csv) dataset from Kaggle and place the archive.zip file inside ```data\raw\raw_flight```
 ```
 ─ DSC288R_Capstone
 └── data
     └── raw
-        └── archive.zip
+        └── raw_flight
+            └── archive.zip
 ```
 6. run ```make data``` in the terminal
-milestone 2

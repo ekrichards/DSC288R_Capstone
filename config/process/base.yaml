@@ -1,5 +1,5 @@
 overall:
-  years: [2018, 2019, 2020] # Years of data we are collecting
+  years: [2018, 2019, 2020, 2021, 2022] # Years of data we are collecting
 
 noaa_data:
   base_url: "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/"    # Base location of NOAA weather data

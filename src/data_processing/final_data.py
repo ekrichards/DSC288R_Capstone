@@ -19,13 +19,12 @@ def load_yaml_files(file_paths):
 # Load and merge configurations
 config = load_yaml_files(CONFIG_FILES)
 
-
 # Extract merge settings
 FLIGHT_DIR = config["paths"]["processed_flight_data"]
 WEATHER_DIR = config["paths"]["processed_noaa_data"]
-# FINAL_DIR = config["paths"]["final_by_year"]
+FINAL_DIR = config["paths"]["final_by_year"]
 FINAL_FILE = config["paths"]["final_combined"]
-YEARS = config["noaa_data"]["years"]
+YEARS = config["overall"]["years"]
 DELETE_SOURCE_FILES = config["final_data"]["delete_processed"]
 DELETE_INTERMEDIATE_FILES = config["final_data"]["delete_merged"]
 
@@ -55,8 +54,8 @@ def add_rolling_averages(df):
     return df
 def merge_flight_weather(year):
     """Merge flight data with origin & destination weather for a given year."""
-    flight_file = os.path.join(FLIGHT_DIR, f"Combined_Flights_{year}.parquet")
-    weather_file = os.path.join(WEATHER_DIR, f"noaa_{year}_clean.parquet")
+    flight_file = os.path.join(FLIGHT_DIR, f"processed_flight_{year}.parquet")
+    weather_file = os.path.join(WEATHER_DIR, f"processed_noaa_{year}.parquet")
 
     if not os.path.exists(flight_file) or not os.path.exists(weather_file):
         tqdm.write(f"Skipping {year}: Missing flight or weather file.")
@@ -101,7 +100,7 @@ def merge_flight_weather(year):
     merged_df = add_rolling_averages(merged_df)
 
     # Save merged dataset
-    merged_file = os.path.join(os.path.dirname(FINAL_FILE), f"{year}_merged.parquet")
+    merged_file = os.path.join(os.path.dirname(FINAL_FILE), f"final_{year}.parquet")
     merged_df.to_parquet(merged_file, index=False)
 
     # Delete source flight & weather files if enabled
