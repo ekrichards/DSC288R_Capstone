@@ -3,6 +3,8 @@ import duckdb
 import pandas as pd
 import yaml
 from tqdm import tqdm
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import TargetEncoder
 
 CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files here
 
@@ -30,6 +32,7 @@ DELETE_INTERMEDIATE_FILES = config["final_data"]["delete_merged"]
 
 # Ensure output directory exists
 os.makedirs(os.path.dirname(FINAL_FILE), exist_ok=True)
+
 def add_rolling_averages(df):
     """Compute rolling averages for weather-related variables."""
     df['FlightDate'] = pd.to_datetime(df['FlightDate'])
@@ -52,6 +55,34 @@ def add_rolling_averages(df):
             )
     
     return df
+
+def train_test_split_encoder(df, cat_cols=["Airline", "Origin", "Dest"], target_col="DepDel15"):
+    # Separate features (X) and target (y)
+    y = df[target_col]
+    X = df.drop(columns=[target_col])
+
+    # Train-test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    # Initialize the TargetEncoder
+    encoder = TargetEncoder(random_state=42)
+
+    # Fit and transform the training data's categorical columns
+    X_train_cat_encoded = encoder.fit_transform(X_train[cat_cols], y_train)
+
+    # Transform the test data's categorical columns
+    X_test_cat_encoded = encoder.transform(X_test[cat_cols])
+
+    # Replace the original categorical columns with the encoded ones
+    X_train_encoded = X_train.copy()
+    X_test_encoded = X_test.copy()
+    X_train_encoded[cat_cols] = X_train_cat_encoded
+    X_test_encoded[cat_cols] = X_test_cat_encoded
+
+    return X_train_encoded, X_test_encoded, y_train, y_test
+
 def merge_flight_weather(year):
     """Merge flight data with origin & destination weather for a given year."""
     flight_file = os.path.join(FLIGHT_DIR, f"processed_flight_{year}.parquet")
@@ -133,8 +164,25 @@ if __name__ == "__main__":
 
         # Save final merged dataset
         df_combined.to_parquet(FINAL_FILE, index=False)
-
         tqdm.write(f"Final merged dataset saved: {FINAL_FILE}")
+
+        # Create train/test splits and encode the specified columns
+        X_train_enc, X_test_enc, y_train, y_test = train_test_split_encoder(df_combined)
+
+        # Save train/test splits in the same directory as df_combined
+        final_directory = os.path.dirname(FINAL_FILE)
+
+        X_train_path = os.path.join(final_directory, "X_train_enc.parquet")
+        X_test_path  = os.path.join(final_directory, "X_test_enc.parquet")
+        y_train_path = os.path.join(final_directory, "y_train.parquet")
+        y_test_path  = os.path.join(final_directory, "y_test.parquet")
+
+        X_train_enc.to_parquet(X_train_path, index=False)
+        X_test_enc.to_parquet(X_test_path, index=False)
+        y_train.to_frame("DepDel15").to_parquet(y_train_path, index=False)
+        y_test.to_frame("DepDel15").to_parquet(y_test_path, index=False)
+
+        tqdm.write(f"Train/Test splits saved to:\n  {X_train_path}\n  {X_test_path}\n  {y_train_path}\n  {y_test_path}")
 
         # Delete intermediate merged files if option is enabled
         if DELETE_INTERMEDIATE_FILES:
