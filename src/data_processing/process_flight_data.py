@@ -4,6 +4,7 @@ import yaml
 from tqdm import tqdm
 import numpy as np
 from sklearn.utils import resample
+import holidays
 
 # List of YAML files to load
 CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files here
