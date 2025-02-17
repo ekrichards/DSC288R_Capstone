@@ -106,6 +106,21 @@ def clean_flight_file(file_path):
         # Combine undersampled data
         df = pd.concat([delayed_flights, on_time_flights_sampled])
 
+    # d) Added Random Under Sampling
+    if "DepDel15" in df.columns:
+        # Separate delayed and non-delayed flights
+        delayed_flights = df[df['DepDel15'] == 1]
+        on_time_flights = df[df['DepDel15'] == 0]
+
+        # Undersample non-delayed to match delayed (1:1 ratio)
+        on_time_flights_sampled = resample(on_time_flights,
+                                        replace=False,  # No duplicates
+                                        n_samples=len(delayed_flights),  # Match delayed count
+                                        random_state=42)
+
+        # Combine undersampled data
+        df = pd.concat([delayed_flights, on_time_flights_sampled])
+
     # 6. Save cleaned file as Parquet with the new filename
     df.to_parquet(save_path, index=False)
 

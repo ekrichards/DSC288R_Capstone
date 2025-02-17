@@ -30,7 +30,28 @@ DELETE_INTERMEDIATE_FILES = config["final_data"]["delete_merged"]
 
 # Ensure output directory exists
 os.makedirs(os.path.dirname(FINAL_FILE), exist_ok=True)
+def add_rolling_averages(df):
+    """Compute rolling averages for weather-related variables."""
+    df['FlightDate'] = pd.to_datetime(df['FlightDate'])
+    df = df.sort_values(['Origin', 'FlightDate'])
 
+    variables = ['TMIN', 'TMAX', 'PRCP', 'SNOW', 'SNWD']
+    time_windows = {'weekly': 7, 'monthly': 30}
+
+    for var in variables:
+        for period, window in time_windows.items():
+            df[f'{period}_avg_origin_{var.lower()}'] = (
+                df.groupby('Origin')[f'Origin_{var}']
+                .apply(lambda x: x.rolling(window=window, min_periods=1).mean())
+                .reset_index(level=0, drop=True)
+            )
+            df[f'{period}_avg_dest_{var.lower()}'] = (
+                df.groupby('Dest')[f'Dest_{var}']
+                .apply(lambda x: x.rolling(window=window, min_periods=1).mean())
+                .reset_index(level=0, drop=True)
+            )
+    
+    return df
 def merge_flight_weather(year):
     """Merge flight data with origin & destination weather for a given year."""
     flight_file = os.path.join(FLIGHT_DIR, f"processed_flight_{year}.parquet")
@@ -76,6 +97,7 @@ def merge_flight_weather(year):
 
     # Close DuckDB connection
     con.close()
+    merged_df = add_rolling_averages(merged_df)
 
     # Add code here
 
@@ -106,6 +128,8 @@ if __name__ == "__main__":
 
         # Read all merged files and concatenate into one DataFrame
         df_combined = pd.concat([pd.read_parquet(f) for f in merged_files], ignore_index=True)
+        
+        df_combined = add_rolling_averages(df_combined)
 
         # Save final merged dataset
         df_combined.to_parquet(FINAL_FILE, index=False)
