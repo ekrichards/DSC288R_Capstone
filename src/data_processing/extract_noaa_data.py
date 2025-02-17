@@ -61,7 +61,7 @@ if __name__ == "__main__":
     if not gz_files:
         logging.warning("No .gz files found in the source directory.")
     else:
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=4) as executor:
             executor.map(extract_file, gz_files)
 
         logging.info("All extractions completed!")
