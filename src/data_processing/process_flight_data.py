@@ -107,6 +107,60 @@ def clean_flight_file(file_path):
         # Combine undersampled data
         df = pd.concat([delayed_flights, on_time_flights_sampled])
 
+    # e) Cyclical Data
+    if "Month" in df.columns:
+        # Transform Month into cyclical features
+        df['Month_sin'] = np.sin(2 * np.pi * df['Month'] / 12)
+        df['Month_cos'] = np.cos(2 * np.pi * df['Month'] / 12)
+
+    if "DayOfWeek" in df.columns:
+        # Transform DayOfWeek into cyclical features
+        df['DayOfWeek_sin'] = np.sin(2 * np.pi * df['DayOfWeek'] / 7)
+        df['DayOfWeek_cos'] = np.cos(2 * np.pi * df['DayOfWeek'] / 7)
+
+    if "FlightDate" in df.columns:
+        # Convert FlightDate to day-of-year (if applicable)
+        df['FlightDate'] = pd.to_datetime(df['FlightDate'])
+        df['DayOfYear'] = df['FlightDate'].dt.dayofyear 
+
+        # Transform DayOfYear into cyclical features
+        df['DayOfYear_sin'] = np.sin(2 * np.pi * df['DayOfYear'] / 365)
+        df['DayOfYear_cos'] = np.cos(2 * np.pi * df['DayOfYear'] / 365)
+
+    # f) Holidays/Near Holidays
+    if "FlightDate" in df.columns:
+        # Load US holidays for 2018-2022 and ensure dates are in `datetime64[ns]`
+        us_holidays = {pd.to_datetime(k): v for k, v in holidays.US(years=range(2018, 2023)).items()}
+
+        # Convert to a list of dates
+        holiday_dates_dynamic = pd.to_datetime(list(us_holidays.keys()))
+
+        # Create a Holiday Indicator (1 if flight is on a holiday, else 0)
+        df['Holiday_Indicator'] = df['FlightDate'].isin(holiday_dates_dynamic).astype(int)
+
+        def is_near_holiday(flight_date, holiday_dict, days=3):
+            """
+            Checks if flight_date is within `days` of any holiday in the provided holiday dictionary.
+            
+            Parameters:
+            - flight_date (str or datetime): The flight date to check.
+            - holiday_dict (dict): Dictionary of holidays (date -> holiday name).
+            - days (int): Number of days to consider as "near" a holiday.
+            
+            Returns:
+            - tuple (bool, str): Whether it's near a holiday and the holiday info.
+            """
+            flight_date = pd.to_datetime(flight_date)  # Convert input to Pandas datetime64
+
+            for holiday_date, holiday_name in holiday_dict.items():
+                if abs((flight_date - holiday_date).days) <= days:
+                    return (True, f"Near {holiday_date.strftime('%Y-%m-%d')} ({holiday_name})")
+            
+            return (False, "Not near a holiday")
+
+        df['Near_Holiday'] = df['FlightDate'].apply(lambda x: is_near_holiday(x, us_holidays)[0])
+
+
     # 6. Save cleaned file as Parquet with the new filename
     df.to_parquet(save_path, index=False)
 
