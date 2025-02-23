@@ -6,38 +6,43 @@ noaa_data:
   elements: ["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]                    # Elements we want from the weather data
   zero_out_elements: ["PRCP", "SNOW", "SNWD"]                           # Elements we are replacing NaN values with 0
   delete_gz: false                                                      # Set to false if you want to keep the .gz files
-  delete_csv: false                                                    # Set to false if you want to keep the .csv files
+  delete_csv: false                                                     # Set to false if you want to keep the .csv files
 
 flight_data:
   delete_pq: false   # Set to false if you want to keep the extracted parquet files
-  keep_columns:       # Columns to retain from flight data
+  keep_columns:      # Columns to retain from flight data
     - FlightDate
     - DayOfWeek
     - Month
     - Airline
     - Origin
     - Dest
-    - Cancelled
-    - Diverted
-    - DivAirportLandings
     - CRSDepTime
-    - DepTime
-    - DepDelay
-    - DepDel15
     - CRSArrTime
-    - ArrTime
-    - ArrDelay
-    - ArrDel15
     - AirTime
     - Distance
-    - TaxiOut
-    - WheelsOff
-    - WheelsOn
-    - TaxiIn
+
+    - DepDelayMinutes
+    - DepDel15
+
+    # - DepTime
+    # - ArrTime
+    # - ArrDelay
+    # - ArrDel15
+    # - TaxiOut
+    # - WheelsOff
+    # - WheelsOn
+    # - TaxiIn
+    # - Cancelled
+    # - Diverted
+    # - DivAirportLandings
+
+
+
 
 final_data:
-  delete_processed: false # Delete individual year files after merging?
-  delete_merged: false # Delete individual year files after merging?
+  delete_processed: false # Set to false if you want to delete individual year files after merging
+  delete_merged: false # Set to false if you want to delete individual year files after merging
 
 dtype_mapping:  
   DayOfWeek: int8  
