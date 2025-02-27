@@ -180,3 +180,6 @@ data/final
 
 # Logging
 logs
+
+# Pickle file models
+*.pkl
