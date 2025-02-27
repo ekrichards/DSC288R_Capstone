@@ -177,6 +177,7 @@ data/raw/raw_flight/archive.zip
 data/extracted
 data/processed
 data/final
+data/obsolete
 
 # Logging
 logs
