@@ -178,5 +178,5 @@ data/extracted
 data/processed
 data/final
 
-# models
-models
+# Pickle file models
+*.pkl
