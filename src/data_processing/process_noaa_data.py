@@ -1,103 +1,151 @@
+# ─── Load Libraries ──────────────────────────────────────────────────────────
 import os
+import sys
 import pandas as pd
-import yaml
-from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
-# Load configuration from YAML
-CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files here
+# ─── Load Utilities ──────────────────────────────────────────────────────────
+# Define project root path and ensure utility modules are accessible
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+sys.path.append(PROJECT_ROOT)
 
-def load_yaml_files(file_paths):
-    """Load multiple YAML files and merge their content."""
-    merged_config = {}
-    for path in file_paths:
-        with open(path, "r") as file:
-            config = yaml.safe_load(file)
-            if config:
-                merged_config.update(config)  # Merge dictionaries (override duplicate keys)
-    return merged_config
+# Import logging and configuration utilities
+from utils.logger_helper import setup_loggers  # Handles log file and console logging
+from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
 
-# Load and merge configurations
+# ─── Load Configuration ──────────────────────────────────────────────────────
+# Load configuration files
+CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]
 config = load_yaml_files(CONFIG_FILES)
 
-# Extract settings from YAML
-EXTRACTED_DIR = config["paths"]["extracted_noaa_data"]              # Directory with raw NOAA data
-PROCESSED_DIR = config["paths"]["processed_noaa_data"]              # Directory to save cleaned data
-YEARS = config["overall"]["years"]                                  # List of years to process
-CORE_ELEMENTS = set(config["noaa_data"]["elements"])                # Elements to keep
-ZERO_OUT_ELEMENTS = set(config["noaa_data"]["zero_out_elements"])   # Elements to replace NaN with 0
-STATION_KEY_PATH = config["paths"]["airport_station_data"]          # Path to station-airport key CSV
-DELETE_CSV = config["noaa_data"]["delete_csv"]                      # Delete raw NOAA CSVs after processing?
+# Extract settings from configuration
+SOURCE_DIR = config["paths"]["extracted_noaa_data"]  # Directory with raw NOAA data
+STATION_KEY_PATH = config["paths"]["airport_station_data"]  # Path to station-airport mapping CSV
+CORE_ELEMENTS = set(config["noaa_data"]["elements"])  # Elements to retain
+ZERO_OUT_ELEMENTS = set(config["noaa_data"]["zero_out_elements"])  # Elements where NaN should be replaced with 0
+SAVE_DIR = config["paths"]["processed_noaa_data"]  # Directory for saving cleaned data
+DELETE_SOURCE = config["noaa_data"]["delete_csv"]  # Whether to delete original CSV files after processing
 
-# Ensure save directory exists
-os.makedirs(PROCESSED_DIR, exist_ok=True)
+# Ensure output directory exists
+os.makedirs(SAVE_DIR, exist_ok=True)
 
-# Load station key and create a mapping (STATION → AIRPORT_CODE)
+# ─── Load Station Mapping ────────────────────────────────────────────────────
+# Read station-airport mapping file
 station_key_df = pd.read_csv(STATION_KEY_PATH, usecols=["Closest_Station", "Airport"])
-valid_stations = set(station_key_df["Closest_Station"].astype(str))  # Set of valid stations
+valid_stations = set(station_key_df["Closest_Station"].astype(str))  # Set of valid station IDs
 station_mapping = dict(zip(station_key_df["Closest_Station"].astype(str), station_key_df["Airport"]))  # Mapping
 
-def clean_noaa_file(file_path, year):
-    """Reads, cleans, and transforms a NOAA GHCN file, filtering first, then replacing stations with airport codes."""
-    save_path = os.path.join(PROCESSED_DIR, f"processed_noaa_{year}.parquet")
+# ─── Setup Loggers ───────────────────────────────────────────────────────────
+# Initialize logging for console (rich_logger) and file output (file_logger)
+LOG_FILENAME = "noaa_processing"
+rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
-    # Read only needed columns
-    df = pd.read_csv(
-        file_path,
-        usecols=[0, 1, 2, 3],  # STATION, DATE, ELEMENT, VALUE
-        names=["STATION", "DATE", "ELEMENT", "VALUE"],  # Assign column names
-        dtype={"STATION": str, "DATE": str, "ELEMENT": str, "VALUE": float},  # Ensure types
-        skiprows=1  # Skip header row since names are assigned manually
-    )
+# ─── Data Cleaning Function ──────────────────────────────────────────────────
+def clean_noaa_file(file_path, progress, task_id):
+    """
+    Cleans and transforms a NOAA GHCN dataset, filtering by relevant stations and elements,
+    replacing station IDs with airport codes, and saving as a Parquet file.
 
-    # Filter for relevant stations (removes unnecessary rows early)
-    df = df[df["STATION"].isin(valid_stations)]
-
-    # Filter only for required core elements (before date conversion for efficiency)
-    df = df[df["ELEMENT"].isin(CORE_ELEMENTS)]
-
-    # Replace station IDs with corresponding airport codes
-    df["STATION"] = df["STATION"].map(station_mapping)
-
-    # Convert date format from YYYYMMDD to YYYY-MM-DD
-    df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
-    df["DATE"] = df["DATE"].astype('datetime64[s]')
-
-    # Pivot table to make ELEMENT values into separate columns
-    df = df.pivot_table(index=["STATION", "DATE"], columns="ELEMENT", values="VALUE", aggfunc="first")
-
-    # Reset index to flatten DataFrame
-    df.reset_index(inplace=True)
-
-    # Ensure all core columns exist (fill missing ones with NaN)
-    for col in CORE_ELEMENTS:
-        if col not in df.columns:
-            df[col] = pd.NA
-
-    # Replace missing values for elements in zero_out_elements list with 0
-    for col in ZERO_OUT_ELEMENTS:
-        if col in df.columns:
-            df[col].fillna(0, inplace=True)
-
-    # Save to Parquet for efficiency
-    df.to_parquet(save_path, index=False)
-
-    # Delete raw CSV file if DELETE_CSV is set to True
-    if DELETE_CSV:
-        os.remove(file_path)
-        tqdm.write(f"Deleted raw CSV file: {file_path}")
-
-    return save_path
-
-if __name__ == "__main__":
-    tqdm.write(f"Cleaning NOAA data for years: {YEARS}")
+    Args:
+        file_path (str): Path to the raw NOAA CSV file.
+        progress (Progress): Shared progress instance.
+        task_id (int): The task ID for updating the spinner status.
     
-    for year in tqdm(YEARS, desc="Processing NOAA files"):
-        raw_file_path = os.path.join(EXTRACTED_DIR, f"extracted_noaa_{year}.csv")
+    Returns:
+        str: Path to the cleaned Parquet file (if successful), or None if the file was missing.
+    """
+    filename = os.path.basename(file_path)  # Extract filename
+    year = filename.replace("extracted_noaa_", "").replace(".csv", "")  # Extract year from filename
+    save_path = os.path.join(SAVE_DIR, f"processed_noaa_{year}.parquet")
 
-        if os.path.exists(raw_file_path):
-            save_path = clean_noaa_file(raw_file_path, year)
-            tqdm.write(f"Saved cleaned file: {save_path}")
-        else:
-            tqdm.write(f"Warning: {raw_file_path} not found, skipping.")
+    try:
+        # Log processing start
+        file_logger.info(f"Processing {filename}...")
 
-    tqdm.write("All NOAA files cleaned and saved.")
+        # Read CSV with specified columns and data types
+        df = pd.read_csv(
+            file_path,
+            usecols=[0, 1, 2, 3],  # STATION, DATE, ELEMENT, VALUE
+            names=["STATION", "DATE", "ELEMENT", "VALUE"],  # Assign column names
+            dtype={"STATION": str, "DATE": str, "ELEMENT": str, "VALUE": float},
+            skiprows=1  # Skip header row since column names are manually assigned
+        )
+
+        # Filter only relevant stations
+        df = df[df["STATION"].isin(valid_stations)]
+
+        # Filter for core elements
+        df = df[df["ELEMENT"].isin(CORE_ELEMENTS)]
+
+        # Replace station IDs with corresponding airport codes
+        df["STATION"] = df["STATION"].map(station_mapping)
+
+        # Convert date format from YYYYMMDD to YYYY-MM-DD
+        df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
+        df["DATE"] = df["DATE"].dt.floor("D")
+
+        # Pivot table to convert ELEMENT values into separate columns
+        df = df.pivot_table(index=["STATION", "DATE"], columns="ELEMENT", values="VALUE", aggfunc="first")
+
+        # Reset index to flatten DataFrame
+        df.reset_index(inplace=True)
+
+        # Ensure all core elements exist (fill missing ones with NaN)
+        df[list(CORE_ELEMENTS)] = df.reindex(columns=list(CORE_ELEMENTS)).fillna(pd.NA)
+
+        # Replace missing values for elements in zero_out_elements with 0
+        df[list(ZERO_OUT_ELEMENTS)] = df[list(ZERO_OUT_ELEMENTS)].fillna(0)
+
+        # Save cleaned data to Parquet format
+        df.to_parquet(save_path, index=False)
+
+        # Optionally delete the original CSV file
+        if DELETE_SOURCE:
+            os.remove(file_path)
+            file_logger.info(f"Deleted raw CSV file: {file_path}")
+
+        # Log successful processing
+        rich_logger.info(f"Successfully processed {filename}")
+        file_logger.info(f"Successfully processed {filename}")
+
+    except Exception as e:
+        # Log processing failure
+        rich_logger.error(f"Error processing {filename}: {e}")
+        file_logger.error(f"Error processing {filename}: {e}")
+
+    finally:
+        # Remove task from progress display after completion
+        progress.remove_task(task_id)
+
+# ─── Main Execution ──────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    rich_logger.info(f"Starting NOAA data processing")
+    file_logger.info(f"Starting NOAA data processing")
+    
+    # Get all CSV files in the extracted directory
+    raw_files = [os.path.join(SOURCE_DIR, f) for f in os.listdir(SOURCE_DIR) if f.endswith(".csv")]
+
+    if not raw_files:
+        # Log warning if no files are found
+        rich_logger.warning("No extracted NOAA CSV files found in the source directory")
+        file_logger.warning("No extracted NOAA CSV files found in the source directory")
+    else:
+        # Initialize a progress task with a spinner indicator
+        with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
+            with ThreadPoolExecutor() as executor: # Use multiple threads for parallel processing
+                futures = {}
+
+                # Create progress spinner tasks and submit extraction jobs
+                for file_path in raw_files:
+                    filename = os.path.basename(file_path)
+                    task_id = progress.add_task(f"Processing {filename}...")
+                    futures[executor.submit(clean_noaa_file, file_path, progress, task_id)] = filename
+
+                # Wait for all tasks to complete
+                for future in as_completed(futures):
+                    future.result()
+
+        # Log completion message
+        rich_logger.info("All NOAA data processing complete")
+        file_logger.info("All NOAA data processing complete")

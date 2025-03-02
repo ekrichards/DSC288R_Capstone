@@ -1,132 +1,105 @@
+# ─── Load Libraries ──────────────────────────────────────────────────────────
 import os
+import sys
 import gzip
 import shutil
-import yaml
-import logging
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+# ─── Load Utilities ──────────────────────────────────────────────────────────
+# Define project root path and ensure utility modules are accessible
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+sys.path.append(PROJECT_ROOT)
 
-# List of YAML files to load
+# Import logging and configuration utilities
+from utils.logger_helper import setup_loggers  # Handles log file and console logging
+from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
+
+# ─── Load Configuration ──────────────────────────────────────────────────────
+# Load relevant configuration files
 CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]
-
-def load_yaml_files(file_paths):
-    """Load multiple YAML files and merge their content."""
-    merged_config = {}
-    for path in file_paths:
-        with open(path, "r") as file:
-            config = yaml.safe_load(file)
-            if config:
-                merged_config.update(config)  # Merge dictionaries (override duplicate keys)
-    return merged_config
-
-# Load and merge configurations
 config = load_yaml_files(CONFIG_FILES)
 
-# Extract settings
-SOURCE_DIR = config["paths"]["raw_noaa_data"]
-SAVE_DIR = config["paths"]["extracted_noaa_data"]
-DELETE_GZ = config["noaa_data"]["delete_gz"]
+# Extract key configuration values
+SOURCE_DIR = config["paths"]["raw_noaa_data"]  # Directory containing .gz files
+SAVE_DIR = config["paths"]["extracted_noaa_data"]  # Directory for extracted CSV files
+DELETE_SOURCE = config["noaa_data"]["delete_gz"]  # Boolean flag for deleting original .gz files after extraction
 
-# Ensure save directory exists
+# Ensure the extraction directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-def extract_file(gz_path):
-    """Extract a GHCN dataset from .gz and optionally delete the original file."""
-    gz_filename = os.path.basename(gz_path)
-    csv_filename = f"extracted_noaa_{gz_filename.replace('.csv.gz', '.csv')}"
-    csv_path = os.path.join(SAVE_DIR, csv_filename)
+# ─── Setup Loggers ───────────────────────────────────────────────────────────
+# Initialize logging for console (rich_logger) and file output (file_logger)
+LOG_FILENAME = "noaa_extract"
+rich_logger, file_logger = setup_loggers(LOG_FILENAME)
+
+# ─── Extraction Function ─────────────────────────────────────────────────────
+def extract_file(gz_path, progress, task_id):
+    """
+    Extracts a GHCN dataset from .gz format and optionally deletes the original file.
+    
+    Args:
+        gz_path (str): Path to the .gz file that needs to be extracted.
+        progress (Progress): Shared progress instance for tracking extraction status.
+        task_id (int): The task ID for updating the spinner status.
+    """
+    gz_filename = os.path.basename(gz_path)  # Get the filename from the path
+    csv_filename = f"extracted_noaa_{gz_filename.replace('.csv.gz', '.csv')}"  # Construct output filename
+    csv_path = os.path.join(SAVE_DIR, csv_filename)  # Define the extraction path
 
     try:
-        logging.info(f"Extracting {gz_filename}...")
+        # Log extraction start
+        file_logger.info(f"Extracting {gz_filename}...")
 
+        # Extract .gz file to .csv format
         with gzip.open(gz_path, "rb") as f_in, open(csv_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+            shutil.copyfileobj(f_in, f_out)  # Copy file contents from compressed to uncompressed format
 
-        logging.info(f"Extracted {gz_filename} to {csv_path}")
-
-        # Delete the compressed file if DELETE_GZ is True
-        if DELETE_GZ:
+        # Delete the original .gz file if configured to do so
+        if DELETE_SOURCE:
             os.remove(gz_path)
-            logging.info(f"Deleted {gz_filename} to save space.")
+
+        # Log successful extraction
+        rich_logger.info(f"Successfully extracted {gz_filename}")
+        file_logger.info(f"Successfully extracted {gz_filename}")
 
     except Exception as e:
-        logging.error(f"Error extracting {gz_filename}: {e}")
+        # Log extraction failure
+        rich_logger.error(f"Error extracting {gz_filename}: {e}")
+        file_logger.error(f"Error extracting {gz_filename}: {e}")
 
+    finally:
+        # Remove task from progress display after completion
+        progress.remove_task(task_id)
+
+# ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # Find all .gz files in SOURCE_DIR
+    rich_logger.info("Starting NOAA data extraction process")
+    file_logger.info("Starting NOAA data extraction process")
+
+    # Get a list of all .gz files in the source directory
     gz_files = [os.path.join(SOURCE_DIR, f) for f in os.listdir(SOURCE_DIR) if f.endswith(".csv.gz")]
 
     if not gz_files:
-        logging.warning("No .gz files found in the source directory.")
+        # Log warning if no files are found
+        rich_logger.warning("No raw NOAA .gz files found in the source directory")
+        file_logger.warning("No raw NOAA .gz files found in the source directory")
     else:
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            executor.map(extract_file, gz_files)
+        # Initialize a progress task with a spinner indicator
+        with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
+            with ThreadPoolExecutor() as executor: # Use multiple threads for parallel extraction
+                futures = {}
 
-        logging.info("All extractions completed!")
+                # Create progress spinner tasks and submit extraction jobs
+                for gz_file in gz_files:
+                    gz_filename = os.path.basename(gz_file)
+                    task_id = progress.add_task(f"Extracting {gz_filename}...")  # Add a task for tracking
+                    futures[executor.submit(extract_file, gz_file, progress, task_id)] = gz_filename
 
-# import os
-# import gzip
-# import shutil
-# import yaml
-# from concurrent.futures import ThreadPoolExecutor
-# from tqdm import tqdm
+                # Wait for all tasks to complete
+                for future in as_completed(futures):
+                    future.result()
 
-# # List of YAML files to load
-# CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files here
-
-# def load_yaml_files(file_paths):
-#     """Load multiple YAML files and merge their content."""
-#     merged_config = {}
-#     for path in file_paths:
-#         with open(path, "r") as file:
-#             config = yaml.safe_load(file)
-#             if config:
-#                 merged_config.update(config)  # Merge dictionaries (override duplicate keys)
-#     return merged_config
-
-# # Load and merge configurations
-# config = load_yaml_files(CONFIG_FILES)
-
-# # Extract settings
-# YEARS = config["overall"]["years"]
-# SOURCE_DIR = config["paths"]["raw_noaa_data"]
-# SAVE_DIR = config["paths"]["extracted_noaa_data"]
-# DELETE_GZ = config["noaa_data"]["delete_gz"] # Delete .gz file after extraction?
-
-# # Ensure save directory exists
-# os.makedirs(SAVE_DIR, exist_ok=True)
-
-# def extract_file(year):
-#     """Extract a GHCN yearly dataset from .gz, optionally delete the .gz."""
-#     gz_filename = f"{year}.csv.gz"
-#     csv_filename = f"extracted_noaa_{year}.csv"
-#     gz_path = os.path.join(SOURCE_DIR, gz_filename)
-#     csv_path = os.path.join(SAVE_DIR, csv_filename)
-
-#     # Check if .gz file exists
-#     if not os.path.exists(gz_path):
-#         tqdm.write(f".gz file for {year} not found, skipping...")
-#         return
-
-#     try:
-#         tqdm.write(f"Extracting {gz_filename}...")
-#         with gzip.open(gz_path, "rb") as f_in:
-#             with open(csv_path, "wb") as f_out:
-#                 shutil.copyfileobj(f_in, f_out)
-#         tqdm.write(f"Extracted {gz_filename} to {csv_path}")
-
-#         # Delete the compressed file if DELETE_GZ is True
-#         if DELETE_GZ:
-#             os.remove(gz_path)
-#             tqdm.write(f"Deleted {gz_filename} to save space.")
-
-#     except Exception as e:
-#         tqdm.write(f"Error extracting {year}: {e}")
-
-# if __name__ == "__main__":
-#     with ThreadPoolExecutor(max_workers=5) as executor:
-#         executor.map(extract_file, YEARS)
-
-#     tqdm.write("All extractions completed!")
+    # Log completion message
+    rich_logger.info("All NOAA data extractions complete")
+    file_logger.info("All NOAA data extractions complete")

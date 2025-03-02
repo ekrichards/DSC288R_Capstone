@@ -1,203 +1,178 @@
 import os
-import pandas as pd
-import yaml
-from tqdm import tqdm
+import sys
 import numpy as np
-from sklearn.utils import resample
+import pandas as pd
 import holidays
+from sklearn.utils import resample
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
-# List of YAML files to load
-CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files here
+# ─── Load Utilities ──────────────────────────────────────────────────────────
+# Define project root path and ensure utility modules are accessible
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+sys.path.append(PROJECT_ROOT)
 
-def load_yaml_files(file_paths):
-    """Load multiple YAML files and merge their content."""
-    merged_config = {}
-    for path in file_paths:
-        with open(path, "r") as file:
-            config = yaml.safe_load(file)
-            if config:
-                merged_config.update(config)  # Merge dictionaries (override duplicate keys)
-    return merged_config
+from utils.logger_helper import setup_loggers  # Handles log file and console logging
+from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
 
-# Load and merge configurations
+# ─── Load Configuration ──────────────────────────────────────────────────────
+CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract flight data settings
-RAW_DIR = config["paths"]["extracted_flight_data"]    # Raw flight data directory
-CLEAN_DIR = config["paths"]["processed_flight_data"]  # Directory to save cleaned data
-DELETE_PQ = config["flight_data"]["delete_pq"]        # Delete raw Parquet files after processing?
-KEEP_COLUMNS = config["flight_data"]["keep_columns"]  # Columns to keep
+SOURCE_DIR = config["paths"]["extracted_flight_data"] # Raw flight data directory
+KEEP_COLUMNS = config["flight_data"]["keep_columns"] # Columns to keep
+SAVE_DIR = config["paths"]["processed_flight_data"] # Directory to save cleaned data
+DELETE_SOURCE = config["flight_data"]["delete_pq"] # Delete source Parquet files after processing
 
 # Ensure the clean directory exists
-os.makedirs(CLEAN_DIR, exist_ok=True)
+os.makedirs(SAVE_DIR, exist_ok=True)
 
-def clean_flight_file(file_path):
-    """Reads, cleans, and transforms a flight data Parquet file, then saves it as processed_flight_<year>.parquet."""
-    
-    # 1. Parse the filename to extract the year
-    filename = os.path.basename(file_path)  # e.g. "extracted_flight_2018.parquet"
-    # Assuming the input filenames always follow the pattern extracted_flight_<year>.parquet:
-    year_str = filename.replace("extracted_flight_", "").replace(".parquet", "")
-    
-    # 2. Construct the new output filename
-    new_filename = f"processed_flight_{year_str}.parquet"
-    save_path = os.path.join(CLEAN_DIR, new_filename)
+# ─── Setup Loggers ───────────────────────────────────────────────────────────
+LOG_FILENAME = "flight_data_processing"
+rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
-    # 3. Read Parquet file with selected columns
-    df = pd.read_parquet(file_path, columns=KEEP_COLUMNS)
+# ─── Helper Functions for Data Transformations ───────────────────────────────
+def undersample_delays(df):
+    """Balances the dataset by downsampling non-delayed flights to match delayed flights."""
+    if "DepDel15" in df.columns:
+        delayed_flights = df[df['DepDel15'] == 1]
+        on_time_flights = df[df['DepDel15'] == 0]
+        on_time_sampled = resample(on_time_flights, replace=False, n_samples=len(delayed_flights), random_state=42)
+        df = pd.concat([delayed_flights, on_time_sampled])
+    return df
 
-    # 4. Convert FlightDate to datetime (if needed)
+def convert_flight_date(df):
+    """Converts FlightDate from YYYYMMDD format to a proper datetime format."""
     if "FlightDate" in df.columns:
-        df["FlightDate"] = df["FlightDate"].astype('datetime64[s]')
+        df["FlightDate"] = pd.to_datetime(df["FlightDate"], format="%Y%m%d")
+        df["FlightDate"] = df["FlightDate"].dt.floor("D")
+    return df
 
-    # 5. Create new categorical columns (make sure required columns exist in KEEP_COLUMNS)
-    
-    # -- a) DelayCategory based on DepDelay
+def categorize_delay(df):
+    """Creates a categorical variable for departure delays based on severity."""
     if "DepDelay" in df.columns:
-        # On-time if DepDelay ≤ 0
-        # Moderate Delay if 0 < DepDelay < 60
-        # Severe Delay if DepDelay ≥ 60
-        conditions = [
+        df["DelayCategory"] = np.select([
             (df["DepDelay"] <= 0),
             (df["DepDelay"] > 0) & (df["DepDelay"] < 60),
-            (df["DepDelay"] >= 60),
-        ]
-        categories = ["On-time", "Moderate Delay", "Severe Delay"]
-        df["DelayCategory"] = np.select(conditions, categories, default="Unknown")
-    
-    # -- b) AirTimeCategory based on AirTime
+            (df["DepDelay"] >= 60)
+        ], ["On-time", "Moderate Delay", "Severe Delay"], default="Unknown")
+    return df
+
+def categorize_airtime(df):
+    """Categorizes flights based on airtime duration."""
     if "AirTime" in df.columns:
-        # Short if < 120
-        # Medium if 120 ≤ AirTime < 360
-        # Long if ≥ 360
-        conditions = [
+        df["AirTimeCategory"] = np.select([
             (df["AirTime"] < 120),
             (df["AirTime"] >= 120) & (df["AirTime"] < 360),
-            (df["AirTime"] >= 360),
-        ]
-        categories = ["Short", "Medium", "Long"]
-        df["AirTimeCategory"] = np.select(conditions, categories, default="Unknown")
+            (df["AirTime"] >= 360)
+        ], ["Short", "Medium", "Long"], default="Unknown")
+    return df
 
-    # -- c) TimeofDay based on DepTime
-    #    Early Morning if DepTime < 600
-    #    Morning if 600 ≤ DepTime < 1200
-    #    Afternoon if 1200 ≤ DepTime < 1800
-    #    Evening if DepTime ≥ 1800
-    if "DepTime" in df.columns:
-        conditions = [
-            (df["DepTime"] < 600),
-            (df["DepTime"] >= 600) & (df["DepTime"] < 1200),
-            (df["DepTime"] >= 1200) & (df["DepTime"] < 1800),
-            (df["DepTime"] >= 1800),
-        ]
-        categories = ["Early Morning", "Morning", "Afternoon", "Evening"]
-        df["TimeofDay"] = np.select(conditions, categories, default="Unknown")
-    
-    if "DepDel15" in df.columns:
-        # Separate delayed and non-delayed flights
-        delayed_flights = df[df['DepDel15'] == 1]
-        on_time_flights = df[df['DepDel15'] == 0]
+def categorize_time_of_day(df):
+    """Assigns a time-of-day category based on departure time."""
+    if "CRSDepTime" in df.columns:
+        df["TimeofDay"] = np.select([
+            (df["CRSDepTime"] < 600),
+            (df["CRSDepTime"] >= 600) & (df["CRSDepTime"] < 1200),
+            (df["CRSDepTime"] >= 1200) & (df["CRSDepTime"] < 1800),
+            (df["CRSDepTime"] >= 1800)
+        ], ["Early Morning", "Morning", "Afternoon", "Evening"], default="Unknown")
+    return df
 
-        # Undersample non-delayed to match delayed (1:1 ratio)
-        on_time_flights_sampled = resample(on_time_flights,
-                                        replace=False,  # No duplicates
-                                        n_samples=len(delayed_flights),  # Match delayed count
-                                        random_state=42)
+def add_cyclical_features(df):
+    """Encodes cyclical time-based features using sine and cosine transformations."""
+    df['DayOfYear'] = df['FlightDate'].dt.dayofyear
+    for col, period in [("Month", 12), ("DayOfWeek", 7), ("DayOfYear", 365), ("CRSDepTime", 2400)]:
+        if col in df.columns:
+            df[f'{col}_sin'] = np.sin(2 * np.pi * df[col] / period)
+            df[f'{col}_cos'] = np.cos(2 * np.pi * df[col] / period)
+    return df
 
-        # Combine undersampled data
-        df = pd.concat([delayed_flights, on_time_flights_sampled])
-
-    # d) Added Random Under Sampling
-    if "DepDel15" in df.columns:
-        # Separate delayed and non-delayed flights
-        delayed_flights = df[df['DepDel15'] == 1]
-        on_time_flights = df[df['DepDel15'] == 0]
-
-        # Undersample non-delayed to match delayed (1:1 ratio)
-        on_time_flights_sampled = resample(on_time_flights,
-                                        replace=False,  # No duplicates
-                                        n_samples=len(delayed_flights),  # Match delayed count
-                                        random_state=42)
-
-        # Combine undersampled data
-        df = pd.concat([delayed_flights, on_time_flights_sampled])
-
-    # e) Cyclical Data
-    if "Month" in df.columns:
-        # Transform Month into cyclical features
-        df['Month_sin'] = np.sin(2 * np.pi * df['Month'] / 12)
-        df['Month_cos'] = np.cos(2 * np.pi * df['Month'] / 12)
-
-    if "DayOfWeek" in df.columns:
-        # Transform DayOfWeek into cyclical features
-        df['DayOfWeek_sin'] = np.sin(2 * np.pi * df['DayOfWeek'] / 7)
-        df['DayOfWeek_cos'] = np.cos(2 * np.pi * df['DayOfWeek'] / 7)
-
+def add_holiday_indicators(df):
+    """Adds a holiday indicator and a 'near holiday' flag based on U.S. holiday data."""
     if "FlightDate" in df.columns:
-        # Convert FlightDate to day-of-year (if applicable)
-        df['FlightDate'] = pd.to_datetime(df['FlightDate'])
-        df['DayOfYear'] = df['FlightDate'].dt.dayofyear 
-
-        # Transform DayOfYear into cyclical features
-        df['DayOfYear_sin'] = np.sin(2 * np.pi * df['DayOfYear'] / 365)
-        df['DayOfYear_cos'] = np.cos(2 * np.pi * df['DayOfYear'] / 365)
-
-    # f) Holidays/Near Holidays
-    if "FlightDate" in df.columns:
-        # Load US holidays for 2018-2022 and ensure dates are in `datetime64[ns]`
         us_holidays = {pd.to_datetime(k): v for k, v in holidays.US(years=range(2018, 2023)).items()}
-
-        # Convert to a list of dates
-        holiday_dates_dynamic = pd.to_datetime(list(us_holidays.keys()))
-
-        # Create a Holiday Indicator (1 if flight is on a holiday, else 0)
-        df['Holiday_Indicator'] = df['FlightDate'].isin(holiday_dates_dynamic).astype(int)
-
+        holiday_dates = pd.to_datetime(list(us_holidays.keys()))
+        df['Holiday_Indicator'] = df['FlightDate'].isin(holiday_dates).astype(int)
+        
         def is_near_holiday(flight_date, holiday_dict, days=3):
-            """
-            Checks if flight_date is within `days` of any holiday in the provided holiday dictionary.
-            
-            Parameters:
-            - flight_date (str or datetime): The flight date to check.
-            - holiday_dict (dict): Dictionary of holidays (date -> holiday name).
-            - days (int): Number of days to consider as "near" a holiday.
-            
-            Returns:
-            - tuple (bool, str): Whether it's near a holiday and the holiday info.
-            """
-            flight_date = pd.to_datetime(flight_date)  # Convert input to Pandas datetime64
-
-            for holiday_date, holiday_name in holiday_dict.items():
+            flight_date = pd.to_datetime(flight_date)
+            for holiday_date in holiday_dict.keys():
                 if abs((flight_date - holiday_date).days) <= days:
-                    return (True, f"Near {holiday_date.strftime('%Y-%m-%d')} ({holiday_name})")
-            
-            return (False, "Not near a holiday")
+                    return 1
+            return 0
+        
+        df['Near_Holiday'] = df['FlightDate'].apply(lambda x: is_near_holiday(x, us_holidays))
+    return df
 
-        df['Near_Holiday'] = df['FlightDate'].apply(lambda x: is_near_holiday(x, us_holidays)[0])
+# ─── Flight Data Cleaning Function ───────────────────────────────────────────
+def clean_flight_file(file_path, progress, task_id):
+    """Processes a single flight data file: cleans, categorizes, and saves."""
+    filename = os.path.basename(file_path)
+    year_str = filename.replace("extracted_flight_", "").replace(".parquet", "")
+    save_path = os.path.join(SAVE_DIR, f"processed_flight_{year_str}.parquet")
+    
+    try:
+        # Log processing start
+        file_logger.info(f"Processing {filename}...")
+        df = pd.read_parquet(file_path, columns=KEEP_COLUMNS) # Load only necessary columns
 
+        # Apply cleaning and transformation steps sequentially
+        df = (df.pipe(undersample_delays)
+                .pipe(convert_flight_date)
+                .pipe(categorize_delay)
+                .pipe(categorize_airtime)
+                .pipe(categorize_time_of_day)
+                .pipe(add_cyclical_features)
+                .pipe(add_holiday_indicators))
+        
+        df.to_parquet(save_path, index=False) # Save processed file
+        if DELETE_SOURCE:
+            os.remove(file_path) # Delete original file if required
+            file_logger.info(f"Deleted raw Parquet file: {file_path}")
 
-    # 6. Save cleaned file as Parquet with the new filename
-    df.to_parquet(save_path, index=False)
+        # Log successful processing
+        rich_logger.info(f"Successfully processed {filename}")
+        file_logger.info(f"Successfully processed {filename}")
+    
+    except Exception as e:
+        # Log processing failure
+        rich_logger.error(f"Error processing {filename}: {e}")
+        file_logger.error(f"Error processing {filename}: {e}")
+    
+    finally:
+        # Remove task from progress display after completion
+        progress.remove_task(task_id)
 
-    # 7. Delete raw Parquet file if DELETE_PQ is set to True
-    if DELETE_PQ:
-        os.remove(file_path)
-        tqdm.write(f"Deleted raw Parquet file: {file_path}")
-
-    return save_path
-
+# ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    tqdm.write(f"Cleaning flight data in {RAW_DIR}")
+    rich_logger.info("Starting flight data processing (this may take a while)")
+    file_logger.info("Starting flight data processing")
+    
+    # Identify all Parquet files in the source directory
+    flight_files = [os.path.join(SOURCE_DIR, f) for f in os.listdir(SOURCE_DIR) if f.endswith(".parquet")]
+    
+    if not flight_files:
+        # Log warning if no files are found
+        rich_logger.warning("No extracted flight parquet files found in the source directory")
+        file_logger.warning("No extracted flight parquet files found in the source directory")
+    else:
+        # Initialize a progress task with a spinner indicator
+        with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
+            with ThreadPoolExecutor() as executor: # Use multiple threads for parallel processing
+                futures = {}
 
-    # Process all Parquet files in the raw directory
-    flight_files = [
-        os.path.join(RAW_DIR, f) 
-        for f in os.listdir(RAW_DIR) 
-        if f.endswith(".parquet")
-    ]
-
-    for file_path in tqdm(flight_files, desc="Processing flight files"):
-        save_path = clean_flight_file(file_path)
-        tqdm.write(f"Saved cleaned file: {save_path}")
-
-    tqdm.write("All flight data cleaned and saved.")
+                # Create progress spinner tasks and submit extraction jobs
+                for file_path in flight_files:
+                    filename = os.path.basename(file_path)
+                    task_id = progress.add_task(f"Processing {filename}...")
+                    futures[executor.submit(clean_flight_file, file_path, progress, task_id)] = filename
+                
+                # Wait for all tasks to complete
+                for future in as_completed(futures):
+                    future.result()
+    
+    # Log completion message
+    rich_logger.info("All flight data processing complete")
+    file_logger.info("All flight data processing complete")
