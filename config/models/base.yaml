@@ -1,0 +1,7 @@
+models:
+  linear_regression:
+    fit_intercept: true
+
+  logistic_regression:
+    C: 1.0
+    max_iter: 100
