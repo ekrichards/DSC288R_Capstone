@@ -82,7 +82,7 @@ def add_generic_rolling_averages(df, columns = ['DepDelayMinutes'], windows = {'
 
     return df
 
-def train_test_split_encoder(df, cat_cols=["Airline", "Origin", "Dest"], target_col="DepDel15"):
+def train_test_split_encoder(df, cat_cols=["Airline", "Origin", "Dest", "AirTimeCategory", "TimeofDay"], target_col="DepDel15"):
     """Performs a train-test split and applies Target Encoding to categorical features."""
     y = df[target_col]
     X = df.drop(columns=[target_col])
@@ -214,6 +214,7 @@ if __name__ == "__main__":
             file_logger.info("Applying rolling averages...")
             final_df = add_rolling_averages(final_df)
             final_df = add_generic_rolling_averages(final_df)
+            final_df.drop('FlightDate', axis=1, inplace=True) # Drops datetime columns
             progress.remove_task(rolling_task)
             rich_logger.info("Successfully applied rolling averages")
             file_logger.info("Successfully applied rolling averages")
