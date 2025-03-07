@@ -33,3 +33,8 @@ and activate it
             └── archive.zip
 ```
 6. run ```make data``` in the terminal
+
+
+![A7865B96-5C07-4F7A-849F-D94577F1937C](https://github.com/user-attachments/assets/d855bb70-ece4-41c3-b5c6-d22d402f70a8)
+
+![5A3C049B-1AE3-4839-9821-633FF82C7F33](https://github.com/user-attachments/assets/5a6ef21e-37a7-4adb-b314-37dc331733e6)
