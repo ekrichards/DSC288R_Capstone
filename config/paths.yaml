@@ -11,6 +11,8 @@ paths:
   processed_noaa_data: data/processed/processed_noaa
 
   final_by_year: data/final
+  final_test: data/final/test_data.parquet
+  final_train: data/final/train_data.parquet
   # final_combined: data/final/final_data.parquet
   # combined_parquet_file: data/processed/combined_data.parquet
 

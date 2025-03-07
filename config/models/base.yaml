@@ -3,5 +3,7 @@ models:
     fit_intercept: true
 
   logistic_regression:
+    exclude_features: ["DepDelayMinutes", "AirTimeCategory", "TimeofDay"]
+    target: "DepDel15"
     C: 1.0
     max_iter: 100
