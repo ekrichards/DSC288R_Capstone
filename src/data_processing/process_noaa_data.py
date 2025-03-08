@@ -61,56 +61,81 @@ def clean_noaa_file(file_path, progress, task_id):
 
     try:
         # Log processing start
-        file_logger.info(f"Processing {filename}...")
+        # rich_logger.info(f"Started processing {filename}...")
+        file_logger.info(f"Loading {filename}...")
+        progress.update(task_id, description=f"Loading {filename}...")
 
-        # Read CSV with specified columns and data types
+        # Load the CSV file
         df = pd.read_csv(
             file_path,
-            usecols=[0, 1, 2, 3],  # STATION, DATE, ELEMENT, VALUE
-            names=["STATION", "DATE", "ELEMENT", "VALUE"],  # Assign column names
+            usecols=[0, 1, 2, 3],  
+            names=["STATION", "DATE", "ELEMENT", "VALUE"],  
             dtype={"STATION": str, "DATE": str, "ELEMENT": str, "VALUE": float},
-            skiprows=1  # Skip header row since column names are manually assigned
+            skiprows=1  
         )
+        rich_logger.info(f"Loaded {filename} with {df.shape[0]} rows")
+        file_logger.info(f"Loaded {filename} with {df.shape[0]} rows")
+        progress.update(task_id, description=f"Filtering stations for {filename}...")
 
-        # Filter only relevant stations
+        # Filter relevant stations
         df = df[df["STATION"].isin(valid_stations)]
+        rich_logger.info(f"Filtered stations for {filename}, remaining: {df.shape[0]} rows")
+        file_logger.info(f"Filtered stations for {filename}, remaining: {df.shape[0]} rows")
+        progress.update(task_id, description=f"Filtering elements for {filename}...")
 
-        # Filter for core elements
+        # Filter relevant elements
         df = df[df["ELEMENT"].isin(CORE_ELEMENTS)]
+        rich_logger.info(f"Filtered elements for {filename}, remaining: {df.shape[0]} rows")
+        file_logger.info(f"Filtered elements for {filename}, remaining: {df.shape[0]} rows")
+        progress.update(task_id, description=f"Replacing station codes for {filename}...")
 
         # Replace station IDs with corresponding airport codes
         df["STATION"] = df["STATION"].map(station_mapping)
+        rich_logger.info(f"Replaced station codes for {filename}")
+        file_logger.info(f"Replaced station codes for {filename}")
+        progress.update(task_id, description=f"Converting date format for {filename}...")
 
-        # Convert date format from YYYYMMDD to YYYY-MM-DD
+        # Convert date format
         df["DATE"] = pd.to_datetime(df["DATE"], format="%Y%m%d")
         df["DATE"] = df["DATE"].dt.floor("D")
+        rich_logger.info(f"Converted date format for {filename}")
+        file_logger.info(f"Converted date format for {filename}")
+        progress.update(task_id, description=f"Pivoting data for {filename}...")
 
-        # Pivot table to convert ELEMENT values into separate columns
+        # Pivot data (ELEMENT values as separate columns)
         df = df.pivot_table(index=["STATION", "DATE"], columns="ELEMENT", values="VALUE", aggfunc="first")
-
-        # Reset index to flatten DataFrame
         df.reset_index(inplace=True)
+        rich_logger.info(f"Pivoted data for {filename}")
+        file_logger.info(f"Pivoted data for {filename}")
+        progress.update(task_id, description=f"Handling missing values for {filename}...")
 
         # Ensure all core elements exist (fill missing ones with NaN)
         df[list(CORE_ELEMENTS)] = df.reindex(columns=list(CORE_ELEMENTS)).fillna(pd.NA)
 
-        # Replace missing values for elements in zero_out_elements with 0
+        # Replace missing values for specific elements with 0
         df[list(ZERO_OUT_ELEMENTS)] = df[list(ZERO_OUT_ELEMENTS)].fillna(0)
+        rich_logger.info(f"Handled missing values for {filename}")
+        file_logger.info(f"Handled missing values for {filename}")
+        progress.update(task_id, description=f"Saving processed file {filename}...")
 
-        # Save cleaned data to Parquet format
+        # Save cleaned data
         df.to_parquet(save_path, index=False)
+        rich_logger.info(f"Saved processed file: {save_path}")
+        file_logger.info(f"Saved processed file: {save_path}")
+        del df  # Free up memory
 
         # Optionally delete the original CSV file
         if DELETE_SOURCE:
             os.remove(file_path)
+            rich_logger.info(f"Deleted raw CSV file: {file_path}")
             file_logger.info(f"Deleted raw CSV file: {file_path}")
 
-        # Log successful processing
+        # Final success log
         rich_logger.info(f"Successfully processed {filename}")
         file_logger.info(f"Successfully processed {filename}")
 
     except Exception as e:
-        # Log processing failure
+        # Log failure
         rich_logger.error(f"Error processing {filename}: {e}")
         file_logger.error(f"Error processing {filename}: {e}")
 

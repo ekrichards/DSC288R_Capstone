@@ -37,8 +37,11 @@ LOG_FILENAME = "train_models"
 rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
 # ─── Training Function ───────────────────────────────────────────────────────
-def train_model(model_name):
-    """Trains the specified model using configuration from the YAML file."""
+def train_model(model_name, base=False):
+    """Trains the specified model using configuration from the YAML file.
+    
+    If `base=True`, the model is trained with default settings (no hyperparameters except `random_state=42` where applicable).
+    """
     data = pd.read_parquet(SOURCE_PATH)
     model_config = MODEL_CONFIG.get(model_name)
     
@@ -54,25 +57,32 @@ def train_model(model_name):
     X = data[features]
     y = data[target_column]
     
+    # Select parameters based on `base` mode
+    if base:
+        model_params = {"random_state": 42} if "random_state" in model_config.get("params", {}) else {}
+    else:
+        model_params = model_config.get("params", {})
+
     # Model selection
     if model_name == "linear_regression":
-        model = LinearRegression()
+        model = LinearRegression(**model_params)
     elif model_name == "logistic_regression":
-        model = LogisticRegression(**model_config["params"])
+        model = LogisticRegression(**model_params)
     elif model_name == "histgradientboosting_regression":
-        model = HistGradientBoostingRegressor(**model_config["params"])
+        model = HistGradientBoostingRegressor(**model_params)
     elif model_name == "sgd_classifier":
-        model = SGDClassifier(**model_config["params"])
+        model = SGDClassifier(**model_params)
     else:
         rich_logger.error("Unsupported model type")
         file_logger.error("Unsupported model type")
     
-    rich_logger.info(f"Starting {model_name} model training")
-    file_logger.info(f"Starting {model_name} model training")
+    mode_label = "base model" if base else "parameter-tuned model"
+    rich_logger.info(f"Starting {mode_label} training for {model_name}")
+    file_logger.info(f"Starting {mode_label} training for {model_name}")
     
     with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
-        train_task = progress.add_task(f"Training {model_name} model...")
-        file_logger.info(f"Training {model_name} model...")
+        train_task = progress.add_task(f"Training {model_name} ({mode_label})...")
+        file_logger.info(f"Training {model_name} ({mode_label})...")
 
         # Capture warnings (e.g., max iterations reached) and log them
         with warnings.catch_warnings(record=True) as w:
@@ -90,16 +100,20 @@ def train_model(model_name):
                 file_logger.warning(warning_message)
                 
         progress.remove_task(train_task)
-        rich_logger.info(f"Successfully trained {model_name}")
-        file_logger.info(f"Successfully trained {model_name}")
+        rich_logger.info(f"Successfully trained {model_name} ({mode_label})")
+        file_logger.info(f"Successfully trained {model_name} ({mode_label})")
 
     # Save model
-    save_task = progress.add_task(f"Saving {model_name} model...")
-    file_logger.info(f"Saving {model_name} model...")
-    model_filename = f"{model_name}.pkl"
+    save_task = progress.add_task(f"Saving {model_name} ({mode_label}) model...")
+    file_logger.info(f"Saving {model_name} ({mode_label}) model...")
+    
+    model_suffix = "_base" if base else ""
+    model_filename = f"{model_name}{model_suffix}.pkl"
     model_path = os.path.join(SAVE_DIR, model_filename)
+    
     with open(model_path, "wb") as f:
         pickle.dump(model, f)
+    
     progress.remove_task(save_task)
     
     rich_logger.info(f"Model saved to {model_path}")
@@ -109,6 +123,7 @@ def train_model(model_name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, required=True, help="Model type (linear_regression, logistic_regression, histgradientboosting_regression, sgd_classifier)")
+    parser.add_argument("--base", action="store_true", help="Train the model without hyperparameters (default: uses parameters from config)")
     args = parser.parse_args()
     
-    train_model(args.model)
+    train_model(args.model, base=args.base)

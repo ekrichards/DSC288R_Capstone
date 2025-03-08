@@ -25,39 +25,6 @@ flight_data:
     - DepDelayMinutes
     - DepDel15
 
-    # - DepTime
-    # - ArrTime
-    # - ArrDelay
-    # - ArrDel15
-    # - TaxiOut
-    # - WheelsOff
-    # - WheelsOn
-    # - TaxiIn
-    # - Cancelled
-    # - Diverted
-    # - DivAirportLandings
-
-
-
-
 final_data:
   delete_processed: false # Set to false if you want to delete individual year files after merging
   delete_merged: false # Set to false if you want to delete individual year files after merging
-
-dtype_mapping:  
-  DayOfWeek: int8  
-  Month: int8  
-  DivAirportLandings: int8  
-  CRSDepTime: int16  
-  DepTime: int16  
-  DepDelay: int16  
-  CRSArrTime: int16  
-  ArrTime: int16  
-  ArrDelay: int16  
-  AirTime: float32  
-  Distance: float32  
-  TaxiOut: int16  
-  WheelsOff: int16  
-  WheelsOn: int16  
-  TaxiIn: int16
-

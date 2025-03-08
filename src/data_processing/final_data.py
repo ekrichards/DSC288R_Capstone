@@ -36,45 +36,35 @@ rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
 # ─── Helper Functions ────────────────────────────────────────────────────────
 def add_rolling_averages(df):
-    """Compute rolling averages for weather-related variables with Origin_ and Dest_ prefixes."""
+    """Compute rolling averages for weather-related variables efficiently."""
     df['FlightDate'] = pd.to_datetime(df['FlightDate'])
     df = df.sort_values(['Origin', 'FlightDate'])
 
     variables = ['TMIN', 'TMAX', 'PRCP', 'SNOW', 'SNWD']
     time_windows = {'weekly': 7, 'monthly': 30}
 
-    for var in variables:
-        for period, window in time_windows.items():
-            df[f'{period}_avg_origin_{var.lower()}'] = (
-                df.groupby('Origin')[f'Origin_{var}']
-                .apply(lambda x: x.rolling(window=window, min_periods=1).mean())
-                .reset_index(level=0, drop=True)
-            )
-            df[f'{period}_avg_dest_{var.lower()}'] = (
-                df.groupby('Dest')[f'Dest_{var}']
-                .apply(lambda x: x.rolling(window=window, min_periods=1).mean())
-                .reset_index(level=0, drop=True)
-            )
-    
+    # Vectorized rolling mean calculation
+    for period, window in time_windows.items():
+        grouped = df.groupby('Origin')[['Origin_TMIN', 'Origin_TMAX', 'Origin_PRCP', 'Origin_SNOW', 'Origin_SNWD']]
+        df[[f'{period}_avg_origin_{var.lower()}' for var in variables]] = grouped.transform(lambda x: x.rolling(window=window, min_periods=1).mean())
+
+        grouped_dest = df.groupby('Dest')[['Dest_TMIN', 'Dest_TMAX', 'Dest_PRCP', 'Dest_SNOW', 'Dest_SNWD']]
+        df[[f'{period}_avg_dest_{var.lower()}' for var in variables]] = grouped_dest.transform(lambda x: x.rolling(window=window, min_periods=1).mean())
+
     # Handle missing values
     df.bfill(inplace=True)
     df.ffill(inplace=True)
 
     return df
 
-def add_generic_rolling_averages(df, columns = ['DepDelayMinutes'], windows = {'weekly': 7, 'monthly': 30}):
+def add_generic_rolling_averages(df, columns=['DepDelayMinutes'], windows={'weekly': 7, 'monthly': 30}):
     """Compute rolling averages for general-purpose features based on Origin."""
     df['FlightDate'] = pd.to_datetime(df['FlightDate'])
+    df = df.sort_values(['Origin', 'FlightDate'])
 
-    for col in columns:
-        if col in df.columns:
-            df = df.sort_values(['Origin', 'FlightDate'])
-            for period, window in windows.items():
-                df[f'{period}_avg_origin_{col.lower()}'] = (
-                    df.groupby('Origin')[col]
-                    .apply(lambda x: x.rolling(window=window, min_periods=1).mean())
-                    .reset_index(level=0, drop=True)
-                )
+    for period, window in windows.items():
+        grouped = df.groupby('Origin')[columns]
+        df[[f'{period}_avg_origin_{col.lower()}' for col in columns]] = grouped.transform(lambda x: x.rolling(window=window, min_periods=1).mean())
 
     # Handle missing values
     df.bfill(inplace=True)

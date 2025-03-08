@@ -92,18 +92,21 @@ def add_cyclical_features(df):
 def add_holiday_indicators(df):
     """Adds a holiday indicator and a 'near holiday' flag based on U.S. holiday data."""
     if "FlightDate" in df.columns:
-        us_holidays = {pd.to_datetime(k): v for k, v in holidays.US(years=range(2018, 2023)).items()}
-        holiday_dates = pd.to_datetime(list(us_holidays.keys()))
-        df['Holiday_Indicator'] = df['FlightDate'].isin(holiday_dates).astype(int)
-        
-        def is_near_holiday(flight_date, holiday_dict, days=3):
-            flight_date = pd.to_datetime(flight_date)
-            for holiday_date in holiday_dict.keys():
-                if abs((flight_date - holiday_date).days) <= days:
-                    return 1
-            return 0
-        
-        df['Near_Holiday'] = df['FlightDate'].apply(lambda x: is_near_holiday(x, us_holidays))
+        df["FlightDate"] = pd.to_datetime(df["FlightDate"])  # Ensure it's datetime
+        us_holidays = pd.to_datetime(list(holidays.US(years=range(2018, 2023)).keys()))  # Convert holidays to datetime
+
+        # Fast holiday indicator using vectorized .isin()
+        df['Holiday_Indicator'] = df['FlightDate'].isin(us_holidays).astype(int)
+
+        # Fast 'near holiday' check using broadcasting (fixing error)
+        days_window = 3  # Change if needed
+        holiday_ranges = np.concatenate([
+            (us_holidays + pd.Timedelta(days=offset)).to_numpy()
+            for offset in range(-days_window, days_window + 1)
+        ])
+
+        df['Near_Holiday'] = df['FlightDate'].isin(holiday_ranges).astype(int)
+
     return df
 
 # ─── Flight Data Cleaning Function ───────────────────────────────────────────
@@ -112,42 +115,64 @@ def clean_flight_file(file_path, progress, task_id):
     filename = os.path.basename(file_path)
     year_str = filename.replace("extracted_flight_", "").replace(".parquet", "")
     save_path = os.path.join(SAVE_DIR, f"processed_flight_{year_str}.parquet")
-    
+
     try:
         # Log processing start
-        file_logger.info(f"Processing {filename}...")
-        df = pd.read_parquet(file_path, columns=KEEP_COLUMNS) # Load only necessary columns
+        rich_logger.info(f"Started processing {filename}")
+        file_logger.info(f"Started processing {filename}")
+        progress.update(task_id, description=f"Loading {filename}...")
 
-        # Apply cleaning and transformation steps sequentially
-        df = (df.pipe(undersample_delays)
-                .pipe(convert_flight_date)
-                .pipe(categorize_delay)
-                .pipe(categorize_airtime)
-                .pipe(categorize_time_of_day)
-                .pipe(add_cyclical_features)
-                .pipe(add_holiday_indicators))
-        
-        df.to_parquet(save_path, index=False) # Save processed file
+        df = pd.read_parquet(file_path, columns=KEEP_COLUMNS)
+        rich_logger.info(f"Loaded {filename} with {df.shape[0]} rows and {df.shape[1]} columns")
+        file_logger.info(f"Loaded {filename} with {df.shape[0]} rows and {df.shape[1]} columns")
+        progress.update(task_id, description=f"Applying transformations to {filename}...")
+
+        # Define transformation steps with logging
+        steps = [
+            ("applying undersampling", undersample_delays),
+            ("converting flight date", convert_flight_date),
+            ("categorizing delay severity", categorize_delay),
+            ("categorizing airtime duration", categorize_airtime),
+            ("categorizing time of day", categorize_time_of_day),
+            ("adding cyclical features", add_cyclical_features),
+            ("adding holiday indicators", add_holiday_indicators)
+        ]
+
+        for step_desc, step_func in steps:
+            progress.update(task_id, description=f"Working on {step_desc} for {filename}...")
+            file_logger.info(f"Working on {step_desc} for {filename}...")
+            df = step_func(df)
+            rich_logger.info(f"Successfully completed {step_desc} for {filename}")
+            file_logger.info(f"Successfully completed {step_desc} for {filename}")
+
+        # Save processed data
+        progress.update(task_id, description=f"Saving processed file {filename}...")
+        df.to_parquet(save_path, index=False)
+        rich_logger.info(f"Saved processed file: {save_path}")
+        file_logger.info(f"Saved processed file: {save_path}")
+        del df  # Free up memory
+
         if DELETE_SOURCE:
-            os.remove(file_path) # Delete original file if required
+            os.remove(file_path)
+            rich_logger.info(f"Deleted raw Parquet file: {file_path}")
             file_logger.info(f"Deleted raw Parquet file: {file_path}")
 
-        # Log successful processing
+        # Final success log
         rich_logger.info(f"Successfully processed {filename}")
         file_logger.info(f"Successfully processed {filename}")
-    
+
     except Exception as e:
         # Log processing failure
         rich_logger.error(f"Error processing {filename}: {e}")
         file_logger.error(f"Error processing {filename}: {e}")
-    
+
     finally:
         # Remove task from progress display after completion
         progress.remove_task(task_id)
 
 # ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    rich_logger.info("Starting flight data processing (this may take a while)")
+    rich_logger.info("Starting flight data processing")
     file_logger.info("Starting flight data processing")
     
     # Identify all Parquet files in the source directory

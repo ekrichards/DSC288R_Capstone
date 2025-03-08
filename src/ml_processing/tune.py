@@ -55,8 +55,9 @@ def train_model_with_tuning(model_name):
     y = data[target_column]
     
     param_dist = model_config.get("param_dist", {})
-    param_combinations = list(ParameterGrid(param_dist))
-    total_combinations = min(len(param_combinations), model_config.get("n_iter", 10))
+    param_combinations = list(ParameterGrid(param_dist))  # Full parameter space
+    total_param_space = len(param_combinations)
+    total_samples = model_config.get("n_iter", 10)  # Number of random samples to draw
     
     # Model selection
     if model_name == "linear_regression":
@@ -72,21 +73,22 @@ def train_model_with_tuning(model_name):
         file_logger.error("Unsupported model type")
         return
     
-    rich_logger.info(f"Starting hyperparameter tuning for {model_name}")
-    file_logger.info(f"Starting hyperparameter tuning for {model_name}")
-    file_logger.info(f"Total hyperparameter combinations: {total_combinations}")
+    rich_logger.info(f"Starting randomized hyperparameter tuning for {model_name}")
+    file_logger.info(f"Starting randomized hyperparameter tuning for {model_name}")
+    file_logger.info(f"Total possible hyperparameter combinations: {total_param_space}")
+    file_logger.info(f"Randomly sampling {total_samples} hyperparameter sets for tuning")
     
     # Log planned runs before training starts
-    file_logger.info("Models to be tested:")
+    file_logger.info("All possible hyperparameter combinations:")
     for i, params in enumerate(param_combinations):
-        file_logger.info(f"  [{i+1}/{total_combinations}] {params}")
+        file_logger.info(f"  [{i+1}/{total_param_space}] {params}")
     
     print("--Verbose output begin--")
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         try:
-            grid_search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=total_combinations, cv=5, n_jobs=2, verbose=3, random_state=42)
+            grid_search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=total_samples, cv=5, n_jobs=2, verbose=3, random_state=42)
             grid_search.fit(X, y)  # Let verbose print naturally to terminal
             print("--Verbose output end--")
         except Exception as e:
