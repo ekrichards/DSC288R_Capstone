@@ -33,7 +33,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 # ─── Setup Loggers ───────────────────────────────────────────────────────────
 # Initialize logging for console (rich_logger) and file output (file_logger)
-LOG_FILENAME = "tune_models"
+LOG_FILENAME = "tune_hyperparameters"
 rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
 # ─── Hyperparameter Tuning Function ──────────────────────────────────────────

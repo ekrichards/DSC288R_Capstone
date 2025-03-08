@@ -20,9 +20,9 @@ CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract key configuration values
-SOURCE_URL = config["noaa_data"]["base_url"]  # NOAA dataset base URL
-YEARS = config["overall"]["years"]  # List of years to download
-SAVE_DIR = config["paths"]["raw_noaa_data"]  # Directory to save downloaded data
+SOURCE_URL = config["noaa_data"]["base_url"]    # NOAA dataset base URL
+YEARS = config["overall"]["years"]              # List of years to download
+SAVE_DIR = config["paths"]["raw_noaa_data"]     # Directory to save downloaded data
 
 # Ensure save directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)

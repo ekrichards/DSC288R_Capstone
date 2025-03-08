@@ -172,15 +172,14 @@ cython_debug/
 
 # DVC entries
 .dvc/
-data/raw/raw_noaa
-data/raw/raw_flight/archive.zip
+data/raw
 data/extracted
 data/processed
 data/final
 data/obsolete
 
 # Logging
-logs
+*.log
 
 # Pickle file models
 *.pkl

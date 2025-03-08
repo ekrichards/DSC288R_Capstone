@@ -1,7 +1,7 @@
 paths:
   airport_station_data: data/provided/airport_station_key.csv
 
-  raw_flight_data: data/raw/raw_flight/archive.zip
+  raw_flight_data: data/raw/raw_flight
   raw_noaa_data: data/raw/raw_noaa
 
   extracted_flight_data: data/extracted/extracted_flight

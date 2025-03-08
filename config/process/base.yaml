@@ -9,6 +9,7 @@ noaa_data:
   delete_csv: false                                                     # Set to false if you want to keep the .csv files
 
 flight_data:
+  kaggle: "robikscube/flight-delay-dataset-20182022"
   delete_pq: false   # Set to false if you want to keep the extracted parquet files
   keep_columns:      # Columns to retain from flight data
     - FlightDate

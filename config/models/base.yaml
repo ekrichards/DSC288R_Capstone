@@ -1,10 +1,10 @@
 models:
   linear_regression:
-    exclude_features: []
+    exclude_features: ["DepDel15"]
     target: "DepDelayMinutes"
 
   histgradientboosting_regression:
-    exclude_features: []
+    exclude_features: ["DepDel15"]
     target: "DepDelayMinutes"
     params:
       max_iter: 100
@@ -19,7 +19,7 @@ models:
       random_state: [42]
 
   logistic_regression:
-    exclude_features: []
+    exclude_features: ["DepDelayMinutes"]
     target: "DepDel15"
     params:
       max_iter: 200
@@ -34,7 +34,7 @@ models:
       random_state: [42]
 
   sgd_classifier:
-    exclude_features: []
+    exclude_features: ["DepDelayMinutes"]
     target: "DepDel15"
     params:
       max_iter: 1000
