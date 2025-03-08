@@ -10,11 +10,13 @@ models:
       max_iter: 100
       learning_rate: 0.1
       max_depth: 5
+      random_state: 42
     n_iter: 10
     param_dist:
       learning_rate: [0.01, 0.1, 0.2, 0.3]
       max_depth: [3, 5, 10, None]
       min_samples_leaf: [1, 5, 10]
+      random_state: [42]
 
   logistic_regression:
     exclude_features: []
@@ -22,20 +24,24 @@ models:
     params:
       max_iter: 200
       solver: "saga"
+      random_state: 42
     n_iter: 10
     param_dist:
       penalty: ["l1", "l2"]
       C: [0.01, 0.1, 1, 10, 100]
       solver: ["saga"]
       max_iter: [1000, 5000, 10000]
+      random_state: [42]
 
   sgd_classifier:
     exclude_features: []
     target: "DepDel15"
     params:
       max_iter: 1000
+      random_state: 42
     n_iter: 10
     param_dist:
       loss: ["hinge", "log", "modified_huber"]
       alpha: [0.0001, 0.001, 0.01, 0.1]
       max_iter: [1000, 2000, 5000]
+      random_state: [42]

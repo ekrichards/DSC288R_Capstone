@@ -1,33 +1,42 @@
+# ─── Load Libraries ──────────────────────────────────────────────────────────
 import sys
 import argparse
 import pandas as pd
 import pickle
 import os
 import warnings
-import json
 from sklearn.model_selection import RandomizedSearchCV, ParameterGrid
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-# Load utilities
+# ─── Load Utilities ──────────────────────────────────────────────────────────
+# Define project root path and ensure utility modules are accessible
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(PROJECT_ROOT)
-from utils.logger_helper import setup_loggers
-from utils.config_loader import load_yaml_files
 
-# Load configuration
+# Import logging and configuration utilities
+from utils.logger_helper import setup_loggers   # Handles log file and console logging
+from utils.config_loader import load_yaml_files # Loads configuration settings from YAML files
+
+# ─── Load Configuration ──────────────────────────────────────────────────────
+# Load relevant configuration files
 CONFIG_FILES = ["config/paths.yaml", "config/models/base.yaml"]
 config = load_yaml_files(CONFIG_FILES)
 
-SOURCE_PATH = config["paths"]["final_train"]
-MODEL_CONFIG = config["models"]
-SAVE_DIR = config["paths"]["trained_models"]
+# Extract key configuration values
+SOURCE_PATH = config["paths"]["final_train"]    # Path to the parquet file containing training data
+MODEL_CONFIG = config["models"]                 # Model parameters and features
+SAVE_DIR = config["paths"]["trained_models"]    # Directory where trained models will be saved
+
+# Ensure the models directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-# Setup loggers
-LOG_FILENAME = "train_models_tuning"
+# ─── Setup Loggers ───────────────────────────────────────────────────────────
+# Initialize logging for console (rich_logger) and file output (file_logger)
+LOG_FILENAME = "tune_models"
 rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
+# ─── Hyperparameter Tuning Function ──────────────────────────────────────────
 def train_model_with_tuning(model_name):
     """Trains the specified model with hyperparameter tuning."""
     data = pd.read_parquet(SOURCE_PATH)
@@ -49,7 +58,7 @@ def train_model_with_tuning(model_name):
     param_combinations = list(ParameterGrid(param_dist))
     total_combinations = min(len(param_combinations), model_config.get("n_iter", 10))
     
-    # Model selection with explicit parameter handling
+    # Model selection
     if model_name == "linear_regression":
         model = LinearRegression()
     elif model_name == "logistic_regression":
@@ -94,8 +103,7 @@ def train_model_with_tuning(model_name):
     rich_logger.info(f"Best parameters found: {grid_search.best_params_}")
     file_logger.info(f"Best parameters found: {grid_search.best_params_}")
     
-    # Save best model
-    # Save full grid search object
+    # Save full grid search object and best model
     gridsearch_filename = f"{model_name}_all_tuned.pkl"
     gridsearch_path = os.path.join(SAVE_DIR, gridsearch_filename)
     with open(gridsearch_path, "wb") as f:
