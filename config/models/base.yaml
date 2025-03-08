@@ -2,7 +2,6 @@ models:
   linear_regression:
     exclude_features: []
     target: "DepDelayMinutes"
-    params: {}
 
   histgradientboosting_regression:
     exclude_features: []
@@ -11,9 +10,10 @@ models:
       max_iter: 100
       learning_rate: 0.1
       max_depth: 5
-    param_grid:
-      learning_rate: [0.01, 0.1, 0.2]
-      max_depth: [3, 5, 10]
+    n_iter: 10
+    param_dist:
+      learning_rate: [0.01, 0.1, 0.2, 0.3]
+      max_depth: [3, 5, 10, None]
       min_samples_leaf: [1, 5, 10]
 
   logistic_regression:
@@ -21,18 +21,21 @@ models:
     target: "DepDel15"
     params:
       max_iter: 200
-      solver: "lbfgs"
-    param_grid:
+      solver: "saga"
+    n_iter: 10
+    param_dist:
       penalty: ["l1", "l2"]
-      C: [0.1, 1, 10]
-      solver: ["liblinear"]
+      C: [0.01, 0.1, 1, 10, 100]
+      solver: ["saga"]
+      max_iter: [1000, 5000, 10000]
 
   sgd_classifier:
     exclude_features: []
     target: "DepDel15"
     params:
       max_iter: 1000
-    param_grid:
-      loss: ["hinge"]
-      alpha: [0.0001, 0.001, 0.01]
-      max_iter: [1000, 2000]
+    n_iter: 10
+    param_dist:
+      loss: ["hinge", "log", "modified_huber"]
+      alpha: [0.0001, 0.001, 0.01, 0.1]
+      max_iter: [1000, 2000, 5000]

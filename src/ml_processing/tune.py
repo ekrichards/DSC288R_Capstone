@@ -5,8 +5,7 @@ import pickle
 import os
 import warnings
 import json
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from sklearn.model_selection import GridSearchCV, ParameterGrid
+from sklearn.model_selection import RandomizedSearchCV, ParameterGrid
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
 from sklearn.ensemble import HistGradientBoostingRegressor
 
@@ -35,18 +34,20 @@ def train_model_with_tuning(model_name):
     model_config = MODEL_CONFIG.get(model_name)
     
     if not model_config:
-        rich_logger.error(f"Model '{model_name}' not found in config file.")
-        file_logger.error(f"Model '{model_name}' not found in config file.")
+        rich_logger.error(f"Model '{model_name}' not found in config file")
+        file_logger.error(f"Model '{model_name}' not found in config file")
         return
     
+    # Select features (exclude the ones in "exclude_features")
     exclude_features = model_config.get("exclude_features", [])
     target_column = model_config["target"]
     features = [col for col in data.columns if col not in exclude_features + [target_column]]
     X = data[features]
     y = data[target_column]
     
-    param_grid = model_config.get("param_grid", {})
-    total_combinations = len(list(ParameterGrid(param_grid)))
+    param_dist = model_config.get("param_dist", {})
+    param_combinations = list(ParameterGrid(param_dist))
+    total_combinations = min(len(param_combinations), model_config.get("n_iter", 10))
     
     # Model selection with explicit parameter handling
     if model_name == "linear_regression":
@@ -64,49 +65,44 @@ def train_model_with_tuning(model_name):
     
     rich_logger.info(f"Starting hyperparameter tuning for {model_name}")
     file_logger.info(f"Starting hyperparameter tuning for {model_name}")
+    file_logger.info(f"Total hyperparameter combinations: {total_combinations}")
     
-    with Progress(SpinnerColumn(), BarColumn(), TextColumn("{task.description}")) as progress:
-        tuning_task = progress.add_task(f"Tuning {model_name} model...", total=total_combinations)
-        file_logger.info(f"Total hyperparameter combinations: {total_combinations}")
+    # Log planned runs before training starts
+    file_logger.info("Models to be tested:")
+    for i, params in enumerate(param_combinations):
+        file_logger.info(f"  [{i+1}/{total_combinations}] {params}")
+    
+    print("--Verbose output begin--")
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        try:
+            grid_search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=total_combinations, cv=5, n_jobs=2, verbose=3, random_state=42)
+            grid_search.fit(X, y)  # Let verbose print naturally to terminal
+            print("--Verbose output end--")
+        except Exception as e:
+            rich_logger.error(f"Tuning failed for {model_name}: {e}")
+            file_logger.error(f"Tuning failed for {model_name}: {e}")
+            raise
         
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            try:
-                grid_search = GridSearchCV(model, param_grid, cv=5, n_jobs=-1, verbose=3)
-                
-                for i, params in enumerate(ParameterGrid(param_grid)):
-                    param_task = progress.add_task(f"Training {model_name} ({i+1}/{total_combinations})", total=1)
-                    rich_logger.info(f"Training model {i+1}/{total_combinations} with params: {params}")
-                    file_logger.info(f"Training model {i+1}/{total_combinations} with params: {params}")
-                    
-                    progress.update(param_task, advance=1)
-                    progress.remove_task(param_task)
-                
-                grid_search.fit(X, y)
-            except Exception as e:
-                rich_logger.error(f"Tuning failed for {model_name}: {e}")
-                file_logger.error(f"Tuning failed for {model_name}: {e}")
-                raise
-            
-            for warning in w:
-                warning_message = f"{warning.category.__name__}: {warning.message}"
-                rich_logger.warning(warning_message)
-                file_logger.warning(warning_message)
-        
-        progress.remove_task(tuning_task)
-        rich_logger.info(f"Best parameters found: {grid_search.best_params_}")
-        file_logger.info(f"Best parameters found: {grid_search.best_params_}")
-        
-    # Save best parameters
-    param_filename = f"{model_name}_tuning_params.json"
-    param_path = os.path.join(SAVE_DIR, param_filename)
-    with open(param_path, "w") as f:
-        json.dump(grid_search.best_params_, f, indent=4)
-    rich_logger.info(f"Best parameters saved to {param_path}")
-    file_logger.info(f"Best parameters saved to {param_path}")
+        for warning in w:
+            warning_message = f"{warning.category.__name__}: {warning.message}"
+            rich_logger.warning(warning_message)
+            file_logger.warning(warning_message)
+
+    # Resume structured logging after training
+    rich_logger.info(f"Best parameters found: {grid_search.best_params_}")
+    file_logger.info(f"Best parameters found: {grid_search.best_params_}")
     
     # Save best model
-    model_filename = f"{model_name}_tuning.pkl"
+    # Save full grid search object
+    gridsearch_filename = f"{model_name}_all_tuned.pkl"
+    gridsearch_path = os.path.join(SAVE_DIR, gridsearch_filename)
+    with open(gridsearch_path, "wb") as f:
+        pickle.dump(grid_search, f)
+    rich_logger.info(f"Full grid search object saved to {gridsearch_path}")
+    file_logger.info(f"Full grid search object saved to {gridsearch_path}")
+    model_filename = f"{model_name}_best_tuned.pkl"
     model_path = os.path.join(SAVE_DIR, model_filename)
     with open(model_path, "wb") as f:
         pickle.dump(grid_search.best_estimator_, f)

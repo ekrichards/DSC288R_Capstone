@@ -45,11 +45,11 @@ def train_model(model_name):
     if not model_config:
         rich_logger.error(f"Model '{model_name}' not found in config file.")
         file_logger.error(f"Model '{model_name}' not found in config file.")
+        return
     
     # Select features (exclude the ones in "exclude_features")
     exclude_features = model_config.get("exclude_features", [])
     target_column = model_config["target"]
-    
     features = [col for col in data.columns if col not in exclude_features + [target_column]]
     X = data[features]
     y = data[target_column]
