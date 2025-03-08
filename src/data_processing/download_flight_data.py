@@ -5,14 +5,25 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-# ─── Load Utilities ──────────────────────────────────────────────────────────
-# Define project root path and ensure utility modules are accessible
+# ─── Set Kaggle API Config Directory to Repo Root ─────────────────────────────
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+KAGGLE_CONFIG_DIR = os.path.join(PROJECT_ROOT, "config")  # Store kaggle.json in /config
+os.environ["KAGGLE_CONFIG_DIR"] = KAGGLE_CONFIG_DIR
+
+# ─── Load Utilities ──────────────────────────────────────────────────────────
 sys.path.append(PROJECT_ROOT)
 
-# Import logging and configuration utilities
-from utils.logger_helper import setup_loggers  # Handles log file and console logging
-from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
+from utils.logger_helper import setup_loggers
+from utils.config_loader import load_yaml_files
+
+# # ─── Load Utilities ──────────────────────────────────────────────────────────
+# # Define project root path and ensure utility modules are accessible
+# PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+# sys.path.append(PROJECT_ROOT)
+
+# # Import logging and configuration utilities
+# from utils.logger_helper import setup_loggers  # Handles log file and console logging
+# from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
 CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]
