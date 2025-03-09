@@ -49,16 +49,6 @@ def convert_flight_date(df):
         df["FlightDate"] = df["FlightDate"].dt.floor("D")
     return df
 
-def categorize_delay(df):
-    """Creates a categorical variable for departure delays based on severity."""
-    if "DepDelay" in df.columns:
-        df["DelayCategory"] = np.select([
-            (df["DepDelay"] <= 0),
-            (df["DepDelay"] > 0) & (df["DepDelay"] < 60),
-            (df["DepDelay"] >= 60)
-        ], ["On-time", "Moderate Delay", "Severe Delay"], default="Unknown")
-    return df
-
 def categorize_airtime(df):
     """Categorizes flights based on airtime duration."""
     if "AirTime" in df.columns:
@@ -66,7 +56,17 @@ def categorize_airtime(df):
             (df["AirTime"] < 120),
             (df["AirTime"] >= 120) & (df["AirTime"] < 360),
             (df["AirTime"] >= 360)
-        ], ["Short", "Medium", "Long"], default="Unknown")
+        ], [0, 1, 2], default="Unknown")
+    return df
+
+def categorize_distance(df):
+    """Categorizes flights based on airtime duration."""
+    if "Distance" in df.columns:
+        df["DistanceCategory"] = np.select([
+            (df["Distance"] < 500),
+            (df["Distance"] >= 500) & (df["Distance"] < 2500),
+            (df["Distance"] >= 2500)
+        ], [0, 1, 2], default="Unknown")
     return df
 
 def categorize_time_of_day(df):
@@ -77,13 +77,25 @@ def categorize_time_of_day(df):
             (df["CRSDepTime"] >= 600) & (df["CRSDepTime"] < 1200),
             (df["CRSDepTime"] >= 1200) & (df["CRSDepTime"] < 1800),
             (df["CRSDepTime"] >= 1800)
-        ], ["Early Morning", "Morning", "Afternoon", "Evening"], default="Unknown")
+        ], [0, 1, 2, 3], default="Unknown")
+    return df
+
+def convert_military_time(df):
+    """Converts a military time column in a DataFrame to total minutes in a day."""
+    def military_to_minutes(time):
+        hh = time // 100
+        mm = time % 100
+        if mm >= 60 or hh >= 24:
+            return None
+        return hh * 60 + mm
+    for col in ['CRSDepTime', 'CRSArrTime']:
+        df[col] = df[col].apply(military_to_minutes)
     return df
 
 def add_cyclical_features(df):
     """Encodes cyclical time-based features using sine and cosine transformations."""
     df['DayOfYear'] = df['FlightDate'].dt.dayofyear
-    for col, period in [("Month", 12), ("DayOfWeek", 7), ("DayOfYear", 365), ("CRSDepTime", 2400)]:
+    for col, period in [("CRSDepTime", 2358), ("CRSArrTime", 2358), ("DayOfYear", 365), ("DayOfWeek", 7), ("Month", 12)]:
         if col in df.columns:
             df[f'{col}_sin'] = np.sin(2 * np.pi * df[col] / period)
             df[f'{col}_cos'] = np.cos(2 * np.pi * df[col] / period)
@@ -109,6 +121,15 @@ def add_holiday_indicators(df):
 
     return df
 
+def add_weekend_indicator(df):
+    df['Weekend_Indicator'] = df['DayOfWeek'].apply(lambda x: 1 if x in [1, 7] else 0)
+    return df
+
+def add_working_indicator(df):
+    df['Working_Day'] = np.where((df['Weekend_Indicator'] == 1) | (df['Holiday_Indicator'] == 1), 0, 1)
+    return df
+
+
 # ─── Flight Data Cleaning Function ───────────────────────────────────────────
 def clean_flight_file(file_path, progress, task_id):
     """Processes a single flight data file: cleans, categorizes, and saves."""
@@ -131,11 +152,15 @@ def clean_flight_file(file_path, progress, task_id):
         steps = [
             ("applying undersampling", undersample_delays),
             ("converting flight date", convert_flight_date),
-            ("categorizing delay severity", categorize_delay),
+            # ("categorizing delay severity", categorize_delay),
             ("categorizing airtime duration", categorize_airtime),
+            ("categorizing flight distance", categorize_distance),
             ("categorizing time of day", categorize_time_of_day),
+            ("converting military time", convert_military_time),
             ("adding cyclical features", add_cyclical_features),
-            ("adding holiday indicators", add_holiday_indicators)
+            ("adding holiday indicators", add_holiday_indicators),
+            ("adding weekend indicators", add_weekend_indicator),
+            ("adding workday indicators", add_working_indicator)
         ]
 
         for step_desc, step_func in steps:

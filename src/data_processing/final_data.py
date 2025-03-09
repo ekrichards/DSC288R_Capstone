@@ -3,7 +3,7 @@ import sys
 import duckdb
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import TargetEncoder
+from sklearn.preprocessing import TargetEncoder, StandardScaler
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -34,62 +34,6 @@ LOG_FILENAME = "flight_weather_merge"
 rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
 # ─── Helper Functions ────────────────────────────────────────────────────────
-def add_rolling_averages(df):
-    """Compute rolling averages for weather-related variables efficiently."""
-    df['FlightDate'] = pd.to_datetime(df['FlightDate'])
-    df = df.sort_values(['Origin', 'FlightDate'])
-
-    variables = ['TMIN', 'TMAX', 'PRCP', 'SNOW', 'SNWD']
-    time_windows = {'weekly': 7, 'monthly': 30}
-
-    # Vectorized rolling mean calculation
-    for period, window in time_windows.items():
-        grouped = df.groupby('Origin')[['Origin_TMIN', 'Origin_TMAX', 'Origin_PRCP', 'Origin_SNOW', 'Origin_SNWD']]
-        df[[f'{period}_avg_origin_{var.lower()}' for var in variables]] = grouped.transform(lambda x: x.rolling(window=window, min_periods=1).mean())
-
-        grouped_dest = df.groupby('Dest')[['Dest_TMIN', 'Dest_TMAX', 'Dest_PRCP', 'Dest_SNOW', 'Dest_SNWD']]
-        df[[f'{period}_avg_dest_{var.lower()}' for var in variables]] = grouped_dest.transform(lambda x: x.rolling(window=window, min_periods=1).mean())
-
-    # Handle missing values
-    df.bfill(inplace=True)
-    df.ffill(inplace=True)
-
-    return df
-
-def add_generic_rolling_averages(df, columns=['DepDelayMinutes'], windows={'weekly': 7, 'monthly': 30}):
-    """Compute rolling averages for general-purpose features based on Origin."""
-    df['FlightDate'] = pd.to_datetime(df['FlightDate'])
-    df = df.sort_values(['Origin', 'FlightDate'])
-
-    for period, window in windows.items():
-        grouped = df.groupby('Origin')[columns]
-        df[[f'{period}_avg_origin_{col.lower()}' for col in columns]] = grouped.transform(lambda x: x.rolling(window=window, min_periods=1).mean())
-
-    # Handle missing values
-    df.bfill(inplace=True)
-    df.ffill(inplace=True)
-
-    return df
-
-def train_test_split_encoder(df, cat_cols=["Airline", "Origin", "Dest", "AirTimeCategory", "TimeofDay"], target_col="DepDel15"):
-    """Performs a train-test split and applies Target Encoding to categorical features."""
-    y = df[target_col]
-    X = df.drop(columns=[target_col])
-
-    # Split dataset
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Apply Target Encoding
-    encoder = TargetEncoder(random_state=42)
-    X_train.loc[:, cat_cols] = encoder.fit_transform(X_train[cat_cols], y_train)
-    X_test.loc[:, cat_cols] = encoder.transform(X_test[cat_cols])
-
-    # Attach target column back safely
-    X_train.loc[:, target_col] = y_train
-    X_test.loc[:, target_col] = y_test
-
-    return X_train, X_test
-
 def merge_flight_weather(year, progress, task_id):
     """Merges flight data with corresponding weather data for a given year."""
     flight_file = os.path.join(FLIGHT_DIR, f"processed_flight_{year}.parquet")
@@ -165,6 +109,156 @@ def merge_flight_weather(year, progress, task_id):
         # Remove task from progress display after completion
         progress.remove_task(task_id)
 
+def add_rolling_averages_weather(df):
+    """Compute rolling averages for weather-related variables efficiently for both Origin and Destination."""
+
+    variables = ['TMIN', 'TMAX', 'PRCP', 'SNOW', 'SNWD']
+    time_windows = {'weekly': 7, 'monthly': 30}
+
+    # Step 1: Aggregate daily weather values per Origin & Destination
+    origin_vars = [f'Origin_{var}' for var in variables]
+    dest_vars = [f'Dest_{var}' for var in variables]
+
+    origin_daily_avg = df.groupby(['Origin', 'FlightDate'])[origin_vars].mean().reset_index()
+    dest_daily_avg = df.groupby(['Dest', 'FlightDate'])[dest_vars].mean().reset_index()
+
+    # Step 2: Compute rolling averages separately for Origin & Destination
+    origin_rolling_avg_cols = []  # List to store new rolling avg column names
+    dest_rolling_avg_cols = []
+
+    for period, window in time_windows.items():
+        for var in variables:
+            # Rolling average for Origin-specific weather
+            origin_col = f'Origin_{var}'
+            origin_avg_col = f'{period}_avg_origin_{var.lower()}'
+            origin_daily_avg[origin_avg_col] = (
+                origin_daily_avg.groupby('Origin')[origin_col]
+                .apply(lambda x: x.ffill().bfill())
+                .rolling(window=window, min_periods=1)
+                .mean()
+                .shift(1)  # Exclude the current day
+                .reset_index(level=0, drop=True)
+            )
+            origin_rolling_avg_cols.append(origin_avg_col)
+
+            # Rolling average for Destination-specific weather
+            dest_col = f'Dest_{var}'
+            dest_avg_col = f'{period}_avg_dest_{var.lower()}'
+            dest_daily_avg[dest_avg_col] = (
+                dest_daily_avg.groupby('Dest')[dest_col]
+                .apply(lambda x: x.ffill().bfill())
+                .rolling(window=window, min_periods=1)
+                .mean()
+                .shift(1)  # Exclude the current day
+                .reset_index(level=0, drop=True)
+            )
+            dest_rolling_avg_cols.append(dest_avg_col)
+
+    # Step 3: Merge rolling averages back to the full dataset using DuckDB
+    conn = duckdb.connect()
+    conn.register("df", df)
+    conn.register("origin_avg", origin_daily_avg)
+    conn.register("dest_avg", dest_daily_avg)
+
+    # Select only rolling average columns (ignoring duplicate originals)
+    origin_rolling_avgs = ", ".join([f"origin_avg.{col}" for col in origin_rolling_avg_cols])
+    dest_rolling_avgs = ", ".join([f"dest_avg.{col}" for col in dest_rolling_avg_cols])
+
+    df_merged = conn.execute(f"""
+        SELECT df.*, 
+               {origin_rolling_avgs},
+               {dest_rolling_avgs}
+        FROM df
+        LEFT JOIN origin_avg 
+        ON df.Origin = origin_avg.Origin AND df.FlightDate = origin_avg.FlightDate
+        LEFT JOIN dest_avg 
+        ON df.Dest = dest_avg.Dest AND df.FlightDate = dest_avg.FlightDate
+    """).fetchdf()
+
+    conn.close()
+    
+    return df_merged
+
+def add_rolling_averages_delays(df, columns=['DepDelayMinutes'], windows={'weekly': 7, 'monthly': 30}):
+    """Compute rolling averages in Pandas and use DuckDB for faster merging."""
+    
+    # Ensure FlightDate is in datetime format
+    # df['FlightDate'] = pd.to_datetime(df['FlightDate'])
+
+    # Step 1: Aggregate to daily means per Origin
+    daily_avg = df.groupby(['Origin', 'FlightDate'])[columns].mean().reset_index()
+
+    # Step 2: Compute rolling averages on the smaller dataset
+    rolling_avg_cols = []
+    for period, window in windows.items():
+        for col in columns:
+            avg_col_name = f"{period}_avg_origin_{col.lower()}"
+            daily_avg[avg_col_name] = (
+                daily_avg.groupby('Origin')[col]
+                .apply(lambda x: x.ffill().bfill())
+                .rolling(window=window, min_periods=1)
+                .mean()
+                .shift(1)  # Excludes the current day from the rolling average
+                .reset_index(level=0, drop=True)
+            )
+            rolling_avg_cols.append(avg_col_name)
+
+    # Step 3: Merge rolling averages back to the full dataset using DuckDB
+    conn = duckdb.connect()  # Establish DuckDB connection
+    conn.register("df", df)  # Register Pandas DataFrame as DuckDB table
+    conn.register("daily_avg", daily_avg)  # Register daily_avg table
+
+    # Select only rolling averages from daily_avg to prevent duplicate columns
+    select_rolling_avgs = ", ".join([f"daily_avg.{col}" for col in rolling_avg_cols])
+
+    df_merged = conn.execute(f"""
+        SELECT df.*, {select_rolling_avgs}
+        FROM df
+        LEFT JOIN daily_avg 
+        ON df.Origin = daily_avg.Origin AND df.FlightDate = daily_avg.FlightDate
+    """).fetchdf()  # Convert result back to Pandas DataFrame
+
+    conn.close()  # Close DuckDB connection
+    return df_merged
+
+def drop_and_scale(df, exclude_cols=[
+    'Airline', 'Origin', 'Dest', 'AirTimeCategory', 'DistanceCategory',
+    'CRSDepTime_sin', 'CRSDepTime_cos', 'CRSArrTime_sin', 'CRSArrTime_cos',
+    'DayOfYear_sin', 'DayOfYear_cos', 'DayOfWeek_sin', 'DayOfWeek_cos',
+    'Month_sin', 'Month_cos', 'Holiday_Indicator', 'Near_Holiday',
+    'Weekend_Indicator', 'Working_Day', 'DepDelayMinutes', 'DepDel15']):
+
+    """Drops all NaN values, scales numerical features"""
+    # Drop NaN values
+    df.dropna(inplace=True)
+
+    # Identify numerical columns for scaling (excluding specified columns)
+    num_cols = [col for col in df.columns if col not in exclude_cols]
+
+    # Initialize scaler and scale numerical features
+    scaler = StandardScaler()
+    df.loc[:, num_cols] = scaler.fit_transform(df.loc[:, num_cols])
+
+    return df
+
+def train_test_split_encoder(df, cat_cols=["Airline", "Origin", "Dest", "AirTimeCategory", "DistanceCategory"], target_col="DepDel15"):
+    """Performs a train-test split and applies Target Encoding to categorical features."""
+    y = df[target_col]
+    X = df.drop(columns=[target_col])
+
+    # Split dataset
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Apply Target Encoding
+    encoder = TargetEncoder(random_state=42)
+    X_train.loc[:, cat_cols] = encoder.fit_transform(X_train[cat_cols], y_train)
+    X_test.loc[:, cat_cols] = encoder.transform(X_test[cat_cols])
+
+    # Attach target column back safely
+    X_train.loc[:, target_col] = y_train
+    X_test.loc[:, target_col] = y_test
+
+    return X_train, X_test
 
 # ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
@@ -201,21 +295,22 @@ if __name__ == "__main__":
             # Rolling Averages Step
             rolling_task = progress.add_task("Applying rolling averages...")
             file_logger.info("Applying rolling averages...")
-            final_df = add_rolling_averages(final_df)
-            final_df = add_generic_rolling_averages(final_df)
-            final_df.drop('FlightDate', axis=1, inplace=True) # Drops datetime columns
+            final_df = add_rolling_averages_weather(final_df)
+            final_df = add_rolling_averages_delays(final_df)
+            final_df.drop('FlightDate', axis=1, inplace=True)
             progress.remove_task(rolling_task)
             rich_logger.info("Successfully applied rolling averages")
             file_logger.info("Successfully applied rolling averages")
 
             # Train-Test Split Step
-            split_task = progress.add_task("Performing train-test split...")
-            file_logger.info("Performing train-test split...")
+            split_task = progress.add_task("Encoding and splitting data...")
+            file_logger.info("Encoding and splitting data...")
+            final_df = drop_and_scale(final_df)
             train_data, test_data = train_test_split_encoder(final_df)
             del final_df  # Free up memory
             progress.remove_task(split_task)
-            rich_logger.info("Successfully performed train-test split")
-            file_logger.info("Successfully performed train-test split")
+            rich_logger.info("Successfully encoded and split data")
+            file_logger.info("Successfully encoded and split data")
 
             # Saving Train/Test Data
             save_task = progress.add_task("Saving train/test splits...")
