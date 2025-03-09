@@ -6,8 +6,8 @@ import pickle
 import os
 import warnings
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
-from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoostingClassifier
+from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier, SGDRegressor
 
 # ─── Load Utilities ──────────────────────────────────────────────────────────
 # Define project root path and ensure utility modules are accessible
@@ -70,11 +70,16 @@ def train_model(model_name, base=False):
         model = LogisticRegression(**model_params)
     elif model_name == "histgradientboosting_regression":
         model = HistGradientBoostingRegressor(**model_params)
+    elif model_name == "histgradientboosting_classifier":
+        model = HistGradientBoostingClassifier(**model_params)
     elif model_name == "sgd_classifier":
         model = SGDClassifier(**model_params)
+    elif model_name == "sgd_regressor":
+        model = SGDRegressor(**model_params)
     else:
         rich_logger.error("Unsupported model type")
         file_logger.error("Unsupported model type")
+        return
     
     mode_label = "base model" if base else "parameter-tuned model"
     rich_logger.info(f"Starting {mode_label} training for {model_name}")

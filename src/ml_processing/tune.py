@@ -6,8 +6,8 @@ import pickle
 import os
 import warnings
 from sklearn.model_selection import RandomizedSearchCV, ParameterGrid
-from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
-from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoostingClassifier
+from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier, SGDRegressor
 
 # ─── Load Utilities ──────────────────────────────────────────────────────────
 # Define project root path and ensure utility modules are accessible
@@ -66,8 +66,12 @@ def train_model_with_tuning(model_name):
         model = LogisticRegression()
     elif model_name == "histgradientboosting_regression":
         model = HistGradientBoostingRegressor()
+    elif model_name == "histgradientboosting_classifier":
+        model = HistGradientBoostingClassifier()
     elif model_name == "sgd_classifier":
         model = SGDClassifier()
+    elif model_name == "sgd_regressor":
+        model = SGDRegressor()
     else:
         rich_logger.error("Unsupported model type")
         file_logger.error("Unsupported model type")
