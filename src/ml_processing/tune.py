@@ -20,7 +20,7 @@ from utils.config_loader import load_yaml_files # Loads configuration settings f
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
 # Load relevant configuration files
-CONFIG_FILES = ["config/paths.yaml", "config/models/base.yaml"]
+CONFIG_FILES = ["config/paths.yaml", "config/models.yaml"]
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract key configuration values

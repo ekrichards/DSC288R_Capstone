@@ -5,13 +5,14 @@ noaa_data:
   base_url: "https://www.ncei.noaa.gov/pub/data/ghcn/daily/by_year/"    # Base location of NOAA weather data
   elements: ["PRCP", "SNOW", "SNWD", "TMAX", "TMIN"]                    # Elements we want from the weather data
   zero_out_elements: ["PRCP", "SNOW", "SNWD"]                           # Elements we are replacing NaN values with 0
-  delete_gz: false                                                      # Set to false if you want to keep the .gz files
-  delete_csv: false                                                     # Set to false if you want to keep the .csv files
+  delete_gz: false                                                      # Set to false if you want to keep the downloaded .gz files
+  delete_csv: false                                                     # Set to false if you want to keep the extracted .csv files
 
 flight_data:
   kaggle: "robikscube/flight-delay-dataset-20182022"
-  delete_pq: false   # Set to false if you want to keep the extracted parquet files
-  keep_columns:      # Columns to retain from flight data
+  delete_zip: false # Set to false if you want to keep the downloaded .zip files
+  delete_pq: false  # Set to false if you want to keep the extracted .pq files
+  keep_columns:     # Columns to retain from flight data
     - FlightDate
     - DayOfWeek
     - Month

@@ -13,7 +13,7 @@ from utils.logger_helper import setup_loggers  # Handles log file and console lo
 from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
-CONFIG_FILES = ["config/models/base.yaml"]
+CONFIG_FILES = ["config/models.yaml"]
 config = load_yaml_files(CONFIG_FILES)  # Load YAML configs
 
 # Get the list of available models from config.yaml
@@ -37,6 +37,7 @@ def run_step(command):
 def run_data_steps():
     """Runs all data preprocessing steps in a defined order."""
     data_steps = [
+        "python src/data_processing/download_flight_data.py",
         "python src/data_processing/download_noaa_data.py",
         "python src/data_processing/extract_noaa_data.py",
         "python src/data_processing/extract_flight_data.py",

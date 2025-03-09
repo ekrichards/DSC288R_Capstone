@@ -16,7 +16,7 @@ from utils.logger_helper import setup_loggers  # Handles log file and console lo
 from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
-CONFIG_FILES = ["config/paths.yaml", "config/process/base.yaml"]  # Add all your YAML files
+CONFIG_FILES = ["config/paths.yaml", "config/data.yaml"]  # Add all your YAML files
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract flight data settings
