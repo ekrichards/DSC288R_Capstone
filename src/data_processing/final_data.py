@@ -25,7 +25,6 @@ WEATHER_DIR = config["paths"]["processed_noaa_data"]
 SAVE_DIR = config["paths"]["final_by_year"]
 YEARS = config["overall"]["years"]
 DELETE_SOURCE_FILES = config["final_data"]["delete_processed"]
-DELETE_INTERMEDIATE_FILES = config["final_data"]["delete_merged"]
 
 # Ensure output directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -148,8 +147,8 @@ def merge_flight_weather(year, progress, task_id):
         if DELETE_SOURCE_FILES:
             os.remove(flight_file)
             os.remove(weather_file)
-            rich_logger.info(f"Deleted source files for {year}")
-            file_logger.info(f"Deleted source files for {year}")
+            rich_logger.info(f"Deleted processed files for {year}")
+            file_logger.info(f"Deleted processed files for {year}")
 
         # Log successful merging
         rich_logger.info(f"Successfully merged {year}")

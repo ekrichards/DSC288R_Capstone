@@ -3,7 +3,7 @@ import os
 import sys
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from rich.progress import Progress, BarColumn, DownloadColumn, TextColumn
+from rich.progress import Progress, BarColumn, DownloadColumn, TextColumn, SpinnerColumn
 
 # ─── Load Utilities ──────────────────────────────────────────────────────────
 # Define project root path and ensure utility modules are accessible
@@ -62,8 +62,7 @@ def download_file(year, progress, task_id):
         with open(save_path, "wb") as file:
             for chunk in response.iter_content(chunk_size=1024):  # Download in 1KB chunks
                 if chunk:
-                    file.write(chunk)  
-                    progress.update(task_id, advance=len(chunk))  
+                    file.write(chunk)
 
         # Log successful download
         rich_logger.info(f"Successfully downloaded {filename}")
@@ -83,18 +82,14 @@ if __name__ == "__main__":
     rich_logger.info("Starting NOAA data download process")
     file_logger.info("Starting NOAA data download process")
 
-    # Initialize progress bar to visually track downloads
-    with Progress(
-        TextColumn("{task.description}"),  # Task description
-        DownloadColumn(),  # Shows downloaded size
-        BarColumn()  # Shows graphical progress bar
-    ) as progress:
+    with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
         with ThreadPoolExecutor() as executor: # Use multiple threads for faster downloads
             futures = {}
 
             # Submit download tasks and track them with progress bar
             for year in YEARS:
-                task_id = progress.add_task(f"Downloading {year}.csv.gz...", total=0)  # Initialize task
+                # task_id = progress.add_task(f"Downloading {year}.csv.gz...", total=0)  # Initialize task
+                task_id = progress.add_task(f"Downloading {year}.csv.gz...")
                 futures[executor.submit(download_file, year, progress, task_id)] = year
 
             # Wait for all tasks to complete

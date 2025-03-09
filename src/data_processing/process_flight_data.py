@@ -154,8 +154,8 @@ def clean_flight_file(file_path, progress, task_id):
 
         if DELETE_SOURCE:
             os.remove(file_path)
-            rich_logger.info(f"Deleted raw Parquet file: {file_path}")
-            file_logger.info(f"Deleted raw Parquet file: {file_path}")
+            rich_logger.info(f"Deleted raw Flight parquet file: {file_path}")
+            file_logger.info(f"Deleted raw Flight parquet file: {file_path}")
 
         # Final success log
         rich_logger.info(f"Successfully processed {filename}")

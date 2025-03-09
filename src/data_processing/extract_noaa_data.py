@@ -58,6 +58,8 @@ def extract_file(gz_path, progress, task_id):
         # Delete the original .gz file if configured to do so
         if DELETE_SOURCE:
             os.remove(gz_path)
+            rich_logger.info(f"Deleted raw NOAA gz file: {gz_filename}")
+            file_logger.info(f"Deleted raw NOAA gz file: {gz_filename}")
 
         # Log successful extraction
         rich_logger.info(f"Successfully extracted {gz_filename}")

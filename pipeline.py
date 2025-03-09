@@ -5,7 +5,7 @@ import subprocess
 import argparse
 
 # ─── Load Utilities ──────────────────────────────────────────────────────────
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 sys.path.append(PROJECT_ROOT)
 
 # Import logging utilities

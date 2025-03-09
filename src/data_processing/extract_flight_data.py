@@ -76,6 +76,8 @@ def extract_parquet_files(zip_path, extract_dir, progress, task_id):
         # Delete ZIP file after successful extraction if enabled
         if DELETE_SOURCE:
             os.remove(zip_path)
+            rich_logger.info(f"Deleted raw Flight zip file: {zip_filename}")
+            file_logger.info(f"Deleted raw Flight zip file: {zip_filename}")
 
     except Exception as e:
         # Log extraction failure
