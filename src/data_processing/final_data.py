@@ -235,6 +235,9 @@ def drop_and_scale(df, exclude_cols=[
     # Identify numerical columns for scaling (excluding specified columns)
     num_cols = [col for col in df.columns if col not in exclude_cols]
 
+    # Convert numerical columns to float BEFORE scaling to avoid dtype issues
+    df[num_cols] = df[num_cols].astype(float)
+
     # Initialize scaler and scale numerical features
     scaler = StandardScaler()
     df.loc[:, num_cols] = scaler.fit_transform(df.loc[:, num_cols])
