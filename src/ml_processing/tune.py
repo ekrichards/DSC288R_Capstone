@@ -115,13 +115,15 @@ def train_model_with_tuning(model_name):
 
     # Save full grid search object and best model
     gridsearch_filename = f"{model_name}_all_tuned.pkl"
-    gridsearch_path = os.path.join(SAVE_DIR, gridsearch_filename)
+    gridsearch_path = os.path.join(model_dir, gridsearch_filename)
     with open(gridsearch_path, "wb") as f:
         pickle.dump(grid_search, f)
+        
     rich_logger.info(f"Full grid search object saved to {gridsearch_path}")
     file_logger.info(f"Full grid search object saved to {gridsearch_path}")
+    
     model_filename = f"{model_name}_best_tuned.pkl"
-    model_path = os.path.join(SAVE_DIR, model_filename)
+    model_path = os.path.join(model_dir, model_filename)
     with open(model_path, "wb") as f:
         pickle.dump(grid_search.best_estimator_, f)
     

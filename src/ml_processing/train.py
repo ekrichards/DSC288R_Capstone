@@ -118,7 +118,7 @@ def train_model(model_name, base=False):
     
     model_suffix = "_base" if base else ""
     model_filename = f"{model_name}{model_suffix}.pkl"
-    model_path = os.path.join(SAVE_DIR, model_filename)
+    model_path = os.path.join(model_dir, model_filename)
     
     with open(model_path, "wb") as f:
         pickle.dump(model, f)
