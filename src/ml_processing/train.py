@@ -102,6 +102,10 @@ def train_model(model_name, base=False):
         progress.remove_task(train_task)
         rich_logger.info(f"Successfully trained {model_name} ({mode_label})")
         file_logger.info(f"Successfully trained {model_name} ({mode_label})")
+    
+    # Create model-specific folder
+    model_dir = os.path.join(SAVE_DIR, model_name)
+    os.makedirs(model_dir, exist_ok=True)
 
     # Save model
     save_task = progress.add_task(f"Saving {model_name} ({mode_label}) model...")

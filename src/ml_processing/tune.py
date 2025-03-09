@@ -83,14 +83,14 @@ def train_model_with_tuning(model_name):
     for i, params in enumerate(param_combinations):
         file_logger.info(f"  [{i+1}/{total_param_space}] {params}")
     
-    print("--Verbose output begin--")
+    print("--VERBOSE OUTPUT BEGIN--")
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         try:
             grid_search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=total_samples, cv=5, n_jobs=2, verbose=3, random_state=42)
             grid_search.fit(X, y)  # Let verbose print naturally to terminal
-            print("--Verbose output end--")
+            print("--VERBOSE OUTPUT END--")
         except Exception as e:
             rich_logger.error(f"Tuning failed for {model_name}: {e}")
             file_logger.error(f"Tuning failed for {model_name}: {e}")
@@ -105,6 +105,10 @@ def train_model_with_tuning(model_name):
     rich_logger.info(f"Best parameters found: {grid_search.best_params_}")
     file_logger.info(f"Best parameters found: {grid_search.best_params_}")
     
+    # Create model-specific folder
+    model_dir = os.path.join(SAVE_DIR, model_name)
+    os.makedirs(model_dir, exist_ok=True)
+
     # Save full grid search object and best model
     gridsearch_filename = f"{model_name}_all_tuned.pkl"
     gridsearch_path = os.path.join(SAVE_DIR, gridsearch_filename)
