@@ -42,12 +42,18 @@ def train_model_with_tuning(model_name):
     """Trains the specified model with hyperparameter tuning."""
     data = pd.read_parquet(SOURCE_PATH)
     data, _ = train_test_split(data, test_size=0.90, random_state=42, stratify=data['DepDel15'])
+    rich_logger.info(f"Sampled 10% of data set for faster tuning")
+    file_logger.info(f"Sampled 10% of data set for faster tuning")
     model_config = MODEL_CONFIG.get(model_name)
     
     if not model_config:
         rich_logger.error(f"Model '{model_name}' not found in config file")
         file_logger.error(f"Model '{model_name}' not found in config file")
         return
+    
+    # # Check if the target column is DepDelayMinutes and filter accordingly
+    # if model_config["target"] == "DepDelayMinutes":
+    #     data = data[data["DepDel15"] == 1]
     
     # Select features (exclude the ones in "exclude_features")
     exclude_features = model_config.get("exclude_features", [])

@@ -51,6 +51,10 @@ def train_model(model_name, base=False):
         file_logger.error(f"Model '{model_name}' not found in config file.")
         return
     
+    # # Check if the target column is DepDelayMinutes and filter accordingly
+    # if model_config["target"] == "DepDelayMinutes":
+    #     data = data[data["DepDel15"] == 1]
+
     # Select features (exclude the ones in "exclude_features")
     exclude_features = model_config.get("exclude_features", [])
     target_column = model_config["target"]
