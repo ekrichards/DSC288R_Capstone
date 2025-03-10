@@ -8,6 +8,7 @@ import warnings
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoostingClassifier
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier, SGDRegressor
+from sklearn.neural_network import MLPRegressor, MLPClassifier
 
 # ─── Load Utilities ──────────────────────────────────────────────────────────
 # Define project root path and ensure utility modules are accessible
@@ -64,18 +65,22 @@ def train_model(model_name, base=False):
         model_params = model_config.get("params", {})
 
     # Model selection
-    if model_name == "linear_regression":
+    if model_name == "lin_reg":
         model = LinearRegression(**model_params)
-    elif model_name == "logistic_regression":
+    elif model_name == "log_reg":
         model = LogisticRegression(**model_params)
-    elif model_name == "histgradientboosting_regression":
+    elif model_name == "hgb_reg":
         model = HistGradientBoostingRegressor(**model_params)
-    elif model_name == "histgradientboosting_classifier":
+    elif model_name == "hgb_clf":
         model = HistGradientBoostingClassifier(**model_params)
-    elif model_name == "sgd_classifier":
+    elif model_name == "sgd_clf":
         model = SGDClassifier(**model_params)
-    elif model_name == "sgd_regressor":
+    elif model_name == "sgd_reg":
         model = SGDRegressor(**model_params)
+    elif model_name == "mlp_reg":
+        model = MLPRegressor(**model_params)
+    elif model_name == "mlp_clf":
+        model = MLPClassifier(**model_params)
     else:
         rich_logger.error("Unsupported model type")
         file_logger.error("Unsupported model type")
@@ -130,8 +135,37 @@ def train_model(model_name, base=False):
 
 # ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, required=True, help="Model type (linear_regression, logistic_regression, histgradientboosting_regression, sgd_classifier)")
+    parser = argparse.ArgumentParser(
+        description="Train various machine learning models using the specified configuration."
+    )
+    parser.add_argument(
+        "--model", 
+        type=str, 
+        required=True, 
+        choices=[
+            "lin_reg", "log_reg", 
+            "hgb_reg", "hgb_clf", 
+            "sgd_reg", "sgd_clf", 
+            "mlp_reg", "mlp_clf"
+        ],
+        help=(
+            "Specify the model to train:\n"
+            "  lin_reg   - Linear Regression\n"
+            "  log_reg   - Logistic Regression\n"
+            "  hgb_reg   - HistGradientBoosting Regressor\n"
+            "  hgb_clf   - HistGradientBoosting Classifier\n"
+            "  sgd_reg   - Stochastic Gradient Descent Regressor\n"
+            "  sgd_clf   - Stochastic Gradient Descent Classifier\n"
+            "  mlp_reg   - Multi-Layer Perceptron Regressor\n"
+            "  mlp_clf   - Multi-Layer Perceptron Classifier\n"
+        )
+    )
+    
+    parser.add_argument(
+        "--base", 
+        action="store_true", 
+        help="Train the model with default hyperparameters (random_state=42 if applicable)."
+    )
     parser.add_argument("--base", action="store_true", help="Train the model without hyperparameters (default: uses parameters from config)")
     args = parser.parse_args()
     

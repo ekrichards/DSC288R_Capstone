@@ -8,6 +8,7 @@ import warnings
 from sklearn.model_selection import RandomizedSearchCV, ParameterGrid, train_test_split
 from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoostingClassifier
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier, SGDRegressor
+from sklearn.neural_network import MLPRegressor, MLPClassifier
 
 # ─── Load Utilities ──────────────────────────────────────────────────────────
 # Define project root path and ensure utility modules are accessible
@@ -61,18 +62,22 @@ def train_model_with_tuning(model_name):
     total_samples = model_config.get("n_iter", 10)  # Number of random samples to draw
     
     # Model selection
-    if model_name == "linear_regression":
+    if model_name == "lin_reg":
         model = LinearRegression()
-    elif model_name == "logistic_regression":
+    elif model_name == "log_reg":
         model = LogisticRegression()
-    elif model_name == "histgradientboosting_regression":
+    elif model_name == "hgb_reg":
         model = HistGradientBoostingRegressor()
-    elif model_name == "histgradientboosting_classifier":
+    elif model_name == "hgb_clf":
         model = HistGradientBoostingClassifier()
-    elif model_name == "sgd_classifier":
+    elif model_name == "sgd_clf":
         model = SGDClassifier()
-    elif model_name == "sgd_regressor":
+    elif model_name == "sgd_reg":
         model = SGDRegressor()
+    elif model_name == "mlp_reg":
+        model = MLPRegressor()
+    elif model_name == "mlp_clf":
+        model = MLPClassifier()
     else:
         rich_logger.error("Unsupported model type")
         file_logger.error("Unsupported model type")
@@ -133,8 +138,31 @@ def train_model_with_tuning(model_name):
 
 # ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, required=True, help="Model type (linear_regression, logistic_regression, histgradientboosting_regression, sgd_classifier)")
+    parser = argparse.ArgumentParser(
+        description="Hyperparameter tune various machine learning models using a subset of the data."
+    )
+    parser.add_argument(
+        "--model", 
+        type=str, 
+        required=True, 
+        choices=[
+            "lin_reg", "log_reg", 
+            "hgb_reg", "hgb_clf", 
+            "sgd_reg", "sgd_clf", 
+            "mlp_reg", "mlp_clf"
+        ],
+        help=(
+            "Specify the model to tune:\n"
+            "  lin_reg   - Linear Regression\n"
+            "  log_reg   - Logistic Regression\n"
+            "  hgb_reg   - HistGradientBoosting Regressor\n"
+            "  hgb_clf   - HistGradientBoosting Classifier\n"
+            "  sgd_reg   - Stochastic Gradient Descent Regressor\n"
+            "  sgd_clf   - Stochastic Gradient Descent Classifier\n"
+            "  mlp_reg   - Multi-Layer Perceptron Regressor\n"
+            "  mlp_clf   - Multi-Layer Perceptron Classifier\n"
+        )
+    )
     args = parser.parse_args()
     
     train_model_with_tuning(args.model)
