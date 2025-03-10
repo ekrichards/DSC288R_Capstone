@@ -221,6 +221,38 @@ def add_rolling_averages_delays(df, columns=['DepDelayMinutes'], windows={'weekl
     conn.close()  # Close DuckDB connection
     return df_merged
 
+def add_rolling_flight_avg(df, column='DepDelayMinutes', windows=[10, 50, 100]):
+    """Computes rolling average delay for past flights per Origin for multiple window sizes."""
+    
+    # Optimize memory usage
+    df['Origin'] = df['Origin'].astype('category')
+    # df['FlightDate'] = pd.to_datetime(df['FlightDate'])  # Ensure it's in datetime format
+
+    # Sort by Origin, FlightDate, and TimeSinceMidnight for proper chronological order
+    df.sort_values(by=['Origin', 'FlightDate', 'CRSDepTime'], inplace=True)
+
+    # Compute rolling averages for each specified window size
+    for window in windows:
+        df[f'past_{window}_avg_delay'] = (
+            df.groupby('Origin', observed=True)[column]
+            .transform(lambda x: x.shift(1).rolling(window=window, min_periods=1).mean())
+            .bfill().ffill()
+        )
+
+    df['Origin'] = df['Origin'].astype(str)
+    return df
+
+def add_cumulative_flight_count(df):
+    """Adds a column counting the number of flights before each flight on the same day and at the same origin."""
+    
+    # Sort by Origin, FlightDate, and TimeSinceMidnight for correct order
+    df.sort_values(by=['Origin', 'FlightDate', 'CRSDepTime'], inplace=True)
+    
+    # Compute cumulative count of flights before each flight on the same day and location
+    df['cumulative_flights_before'] = df.groupby(['Origin', 'FlightDate']).cumcount()
+    
+    return df
+
 def drop_and_scale(df, exclude_cols=[
     'Airline', 'Origin', 'Dest', 'AirTimeCategory', 'DistanceCategory',
     'CRSDepTime_sin', 'CRSDepTime_cos', 'CRSArrTime_sin', 'CRSArrTime_cos',
@@ -232,15 +264,15 @@ def drop_and_scale(df, exclude_cols=[
     # Drop NaN values
     df.dropna(inplace=True)
 
-    # Identify numerical columns for scaling (excluding specified columns)
-    num_cols = [col for col in df.columns if col not in exclude_cols]
+    # # Identify numerical columns for scaling (excluding specified columns)
+    # num_cols = [col for col in df.columns if col not in exclude_cols]
 
-    # Convert numerical columns to float BEFORE scaling to avoid dtype issues
-    df[num_cols] = df[num_cols].astype(float)
+    # # Convert numerical columns to float BEFORE scaling to avoid dtype issues
+    # df[num_cols] = df[num_cols].astype(float)
 
-    # Initialize scaler and scale numerical features
-    scaler = StandardScaler()
-    df.loc[:, num_cols] = scaler.fit_transform(df.loc[:, num_cols])
+    # # Initialize scaler and scale numerical features
+    # scaler = StandardScaler()
+    # df.loc[:, num_cols] = scaler.fit_transform(df.loc[:, num_cols])
 
     return df
 
@@ -300,6 +332,8 @@ if __name__ == "__main__":
             file_logger.info("Applying rolling averages...")
             final_df = add_rolling_averages_weather(final_df)
             final_df = add_rolling_averages_delays(final_df)
+            final_df = add_rolling_flight_avg(final_df)
+            final_df = add_cumulative_flight_count(final_df)
             final_df.drop('FlightDate', axis=1, inplace=True)
             progress.remove_task(rolling_task)
             rich_logger.info("Successfully applied rolling averages")

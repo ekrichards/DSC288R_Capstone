@@ -5,7 +5,7 @@ import pandas as pd
 import pickle
 import os
 import warnings
-from sklearn.model_selection import RandomizedSearchCV, ParameterGrid
+from sklearn.model_selection import RandomizedSearchCV, ParameterGrid, train_test_split
 from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoostingClassifier
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier, SGDRegressor
 
@@ -40,6 +40,7 @@ rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 def train_model_with_tuning(model_name):
     """Trains the specified model with hyperparameter tuning."""
     data = pd.read_parquet(SOURCE_PATH)
+    data, _ = train_test_split(data, test_size=0.90, random_state=42, stratify=data['DepDel15'])
     model_config = MODEL_CONFIG.get(model_name)
     
     if not model_config:
