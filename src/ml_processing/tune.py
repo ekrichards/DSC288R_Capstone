@@ -41,19 +41,20 @@ rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 def train_model_with_tuning(model_name):
     """Trains the specified model with hyperparameter tuning."""
     data = pd.read_parquet(SOURCE_PATH)
-    data, _ = train_test_split(data, test_size=0.90, random_state=42, stratify=data['DepDel15'])
-    rich_logger.info(f"Sampled 10% of data set for faster tuning")
-    file_logger.info(f"Sampled 10% of data set for faster tuning")
     model_config = MODEL_CONFIG.get(model_name)
     
     if not model_config:
         rich_logger.error(f"Model '{model_name}' not found in config file")
         file_logger.error(f"Model '{model_name}' not found in config file")
         return
-    
+
     # # Check if the target column is DepDelayMinutes and filter accordingly
-    # if model_config["target"] == "DepDelayMinutes":
+    # if model_config["type"] == "reg":
     #     data = data[data["DepDel15"] == 1]
+    
+    data, _ = train_test_split(data, test_size=0.90, random_state=42, stratify=data['DepDel15'])
+    rich_logger.info(f"Sampled 10% of data set for faster tuning")
+    file_logger.info(f"Sampled 10% of data set for faster tuning")
     
     # Select features (exclude the ones in "exclude_features")
     exclude_features = model_config.get("exclude_features", [])
@@ -104,7 +105,7 @@ def train_model_with_tuning(model_name):
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         try:
-            grid_search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=total_samples, cv=5, n_jobs=2, verbose=3, random_state=42)
+            grid_search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=total_samples, cv=5, n_jobs=-1, verbose=3, random_state=42)
             grid_search.fit(X, y)  # Let verbose print naturally to terminal
             print("--VERBOSE OUTPUT END--")
         except Exception as e:

@@ -1,9 +1,30 @@
 models:
   lin_reg:
+    type: "reg"
     exclude_features: ["DepDel15"]
     target: "DepDelayMinutes"
 
+  hgb_reg:
+    type: "reg"
+    exclude_features: ["DepDel15"]
+    target: "DepDelayMinutes"
+    params:
+      random_state: 42
+      min_samples_leaf: 5
+      learning_rate: 0.1
+      max_depth: 10
+    n_iter: 40
+    param_dist:
+      learning_rate: [0.01, 0.05, 0.1, 0.2, 0.3, 0.5]
+      max_depth: [3, 5, 10, 15]
+      min_samples_leaf: [1, 3, 5, 10, 20]
+      max_iter: [100, 200, 500, 1000]
+      l2_regularization: [0.0, 0.1, 0.5, 1.0]
+      max_bins: [63, 127, 255]
+      random_state: [42]
+
   sgd_reg:
+    type: "reg"
     exclude_features: ["DepDel15"]
     target: "DepDelayMinutes"
     params:
@@ -12,7 +33,7 @@ models:
       learning_rate: 'optimal'
       eta0: 0.01
       alpha: 0.1
-    n_iter: 50
+    n_iter: 30
     param_dist:
       loss: ["squared_error", "squared_epsilon_insensitive"]
       alpha: [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0]
@@ -22,32 +43,20 @@ models:
       penalty: ["l2", "l1", "elasticnet"]
       random_state: [42]
 
-  hgb_reg:
-    exclude_features: ["DepDel15"]
-    target: "DepDelayMinutes"
-    params:
-      random_state: 42
-      min_samples_leaf: 5
-      learning_rate: 0.1
-      max_depth: 10
-    n_iter: 50
-    param_dist:
-      learning_rate: [0.01, 0.05, 0.1, 0.2, 0.3, 0.5]
-      max_depth: [3, 5, 10, 15, None]
-      min_samples_leaf: [1, 3, 5, 10, 20]
-      max_iter: [100, 200, 500, 1000]
-      l2_regularization: [0.0, 0.1, 0.5, 1.0]
-      max_bins: [63, 127, 255]
-      random_state: [42]
-
   mlp_reg:
+    type: "reg"
     exclude_features: ["DepDel15"]
     target: "DepDelayMinutes"
     params:
       random_state: 42
-    n_iter: 50
+    n_iter: 20
     param_dist:
-      hidden_layer_sizes: [(50,), (100,), (50, 50), (100, 50), (100, 100)]
+      hidden_layer_sizes:
+        - [50]
+        - [100]
+        - [50, 50]
+        - [100, 50]
+        - [100, 100]
       activation: ["relu", "tanh", "logistic"]
       solver: ["adam", "sgd", "lbfgs"]
       alpha: [0.0001, 0.001, 0.01, 0.1, 1.0]
@@ -56,6 +65,7 @@ models:
       random_state: [42]
 
   log_reg:
+    type: "clf"
     exclude_features: ["DepDelayMinutes"]
     target: "DepDel15"
     params:
@@ -67,6 +77,7 @@ models:
       random_state: [42]
 
   hgb_clf:
+    type: "clf"
     exclude_features: ["DepDelayMinutes"]
     target: "DepDel15"
     params:
@@ -74,10 +85,10 @@ models:
       learning_rate: 0.2
       min_samples_leaf: 1
       max_depth: 5
-    n_iter: 50
+    n_iter: 40
     param_dist:
       learning_rate: [0.01, 0.05, 0.1, 0.2, 0.3, 0.5]
-      max_depth: [3, 5, 10, 15, None]
+      max_depth: [3, 5, 10, 15]
       min_samples_leaf: [1, 3, 5, 10, 20]
       max_iter: [100, 200, 500, 1000]
       l2_regularization: [0.0, 0.1, 0.5, 1.0]
@@ -85,6 +96,7 @@ models:
       random_state: [42]
 
   sgd_clf:
+    type: "clf"
     exclude_features: ["DepDelayMinutes"]
     target: "DepDel15"
     params:
@@ -92,7 +104,7 @@ models:
       max_iter: 5000
       loss: 'modified_huber'
       alpha: 0.1
-    n_iter: 50
+    n_iter: 30
     param_dist:
       loss: ["hinge", "log_loss", "modified_huber", "squared_hinge", "perceptron"]
       alpha: [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0]
@@ -101,13 +113,19 @@ models:
       random_state: [42]
 
   mlp_clf:
+    type: "clf"
     exclude_features: ["DepDelayMinutes"]
     target: "DepDel15"
     params:
       random_state: 42
-    n_iter: 50
+    n_iter: 20
     param_dist:
-      hidden_layer_sizes: [(50,), (100,), (50, 50), (100, 50), (100, 100)]
+      hidden_layer_sizes:
+        - [50]
+        - [100]
+        - [50, 50]
+        - [100, 50]
+        - [100, 100]
       activation: ["relu", "tanh", "logistic"]
       solver: ["adam", "sgd", "lbfgs"]
       alpha: [0.0001, 0.001, 0.01, 0.1, 1.0]

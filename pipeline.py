@@ -18,6 +18,8 @@ config = load_yaml_files(CONFIG_FILES)  # Load YAML configs
 
 # Get the list of available models from config.yaml
 AVAILABLE_MODELS = list(config["models"].keys())
+CLASSIFICATION_MODELS = [m for m in AVAILABLE_MODELS if config["models"][m]["type"] == "clf"]
+REGRESSION_MODELS = [m for m in AVAILABLE_MODELS if config["models"][m]["type"] == "reg"]
 
 # ─── Setup Loggers ───────────────────────────────────────────────────────────
 LOG_FILENAME = "pipeline"
@@ -55,6 +57,21 @@ def run_data_steps():
     rich_logger.info("Data processing completed successfully!")
     file_logger.info("Data processing completed successfully!")
 
+def get_model_list(selection):
+    """Returns the appropriate list of models based on user selection."""
+    if selection == "all":
+        return AVAILABLE_MODELS
+    elif selection == "clf":
+        return CLASSIFICATION_MODELS
+    elif selection == "reg":
+        return REGRESSION_MODELS
+    elif selection in AVAILABLE_MODELS:
+        return [selection]
+    else:
+        rich_logger.error(f"Invalid model selection: {selection}")
+        file_logger.error(f"Invalid model selection: {selection}")
+        sys.exit(1)
+
 def train_model(model, base=False):
     """Trains a specific model with or without hyperparameters."""
     if model not in AVAILABLE_MODELS:
@@ -65,13 +82,13 @@ def train_model(model, base=False):
     base_flag = "--base" if base else ""
     run_step(f"python src/ml_processing/train.py --model {model} {base_flag}")
 
-def train_all_models(base=False):
+def train_models(selection, base=False):
     """Trains all available models with or without hyperparameters."""
+    models = get_model_list(selection)
     mode_label = "base models" if base else "parameter-tuned models"
-    rich_logger.info(f"Training all {mode_label}")
-    file_logger.info(f"Training all {mode_label}")
-    
-    for model in AVAILABLE_MODELS:
+    rich_logger.info(f"Training {selection} ({mode_label})")
+    file_logger.info(f"Training {selection} ({mode_label})")
+    for model in models:
         train_model(model, base=base)
 
 def tune_model(model):
@@ -82,11 +99,12 @@ def tune_model(model):
         sys.exit(1)
     run_step(f"python src/ml_processing/tune.py --model {model}")
 
-def tune_all_models():
+def tune_models(selection):
     """Tunes hyperparameters for all available models."""
-    rich_logger.info("Tuning hyperparameters for all models")
-    file_logger.info("Tuning hyperparameters for all models")
-    for model in AVAILABLE_MODELS:
+    models = get_model_list(selection)
+    rich_logger.info(f"Tuning hyperparameters for {selection}")
+    file_logger.info(f"Tuning hyperparameters for {selection}")
+    for model in models:
         tune_model(model)
 
 def run_pipeline():
@@ -102,8 +120,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ML Pipeline CLI")
     
     parser.add_argument("--data", action="store_true", help="Run all data preprocessing steps")
-    parser.add_argument("--train", choices=AVAILABLE_MODELS + ["all"], help="Train a specific model or all models")
-    parser.add_argument("--tune", choices=AVAILABLE_MODELS + ["all"], help="Tune hyperparameters for a specific model or all models")
+    parser.add_argument("--train", choices=AVAILABLE_MODELS + ["all", "clf", "reg"], help="Train a specific model or all models")
+    parser.add_argument("--tune", choices=AVAILABLE_MODELS + ["all", "clf", "reg"], help="Tune hyperparameters for a specific model or all models")
     parser.add_argument("--base", action="store_true", help="Train models without hyperparameters")
     parser.add_argument("--run", action="store_true", help="Run full data processing and train all parameter-tuned models")
 
@@ -117,13 +135,7 @@ if __name__ == "__main__":
         run_data_steps()
 
     if args.train:
-        if args.train == "all":
-            train_all_models(base=args.base)
-        else:
-            train_model(args.train, base=args.base)
+        train_models(args.train, base=args.base)
 
     if args.tune:
-        if args.tune == "all":
-            tune_all_models()
-        else:
-            tune_model(args.tune)
+        tune_models(args.tune)

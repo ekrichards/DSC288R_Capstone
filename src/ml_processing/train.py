@@ -52,7 +52,7 @@ def train_model(model_name, base=False):
         return
     
     # # Check if the target column is DepDelayMinutes and filter accordingly
-    # if model_config["target"] == "DepDelayMinutes":
+    # if model_config["type"] == "reg":
     #     data = data[data["DepDel15"] == 1]
 
     # Select features (exclude the ones in "exclude_features")
@@ -163,12 +163,6 @@ if __name__ == "__main__":
             "  mlp_reg   - Multi-Layer Perceptron Regressor\n"
             "  mlp_clf   - Multi-Layer Perceptron Classifier\n"
         )
-    )
-    
-    parser.add_argument(
-        "--base", 
-        action="store_true", 
-        help="Train the model with default hyperparameters (random_state=42 if applicable)."
     )
     parser.add_argument("--base", action="store_true", help="Train the model without hyperparameters (default: uses parameters from config)")
     args = parser.parse_args()
