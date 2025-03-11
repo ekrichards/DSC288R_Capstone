@@ -113,7 +113,7 @@ def run_pipeline():
     file_logger.info("Running full pipeline (data processing + model training)")
     
     run_data_steps()
-    train_all_models(base=False)
+    train_models("all", base=False)
 
 # ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
