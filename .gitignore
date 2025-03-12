@@ -183,7 +183,7 @@ data/obsolete
 
 # Pickle file models
 models/obsolete
-*.pkl
+# *.pkl
 
 # Kaggle Token
 kaggle.json
