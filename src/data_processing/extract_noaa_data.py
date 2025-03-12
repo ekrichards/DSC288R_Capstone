@@ -12,8 +12,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")
 sys.path.append(PROJECT_ROOT)
 
 # Import logging and configuration utilities
-from utils.logger_helper import setup_loggers  # Handles log file and console logging
-from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
+from utils.logger_helper import setup_loggers   # Handles log file and console logging
+from utils.config_loader import load_yaml_files # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
 # Load relevant configuration files
@@ -21,9 +21,9 @@ CONFIG_FILES = ["config/paths.yaml", "config/data.yaml"]
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract key configuration values
-SOURCE_DIR = config["paths"]["raw_noaa_data"]  # Directory containing .gz files
-SAVE_DIR = config["paths"]["extracted_noaa_data"]  # Directory for extracted CSV files
-DELETE_SOURCE = config["noaa_data"]["delete_gz"]  # Boolean flag for deleting original .gz files after extraction
+SOURCE_DIR = config["paths"]["raw_noaa_data"]       # Directory containing .gz files
+SAVE_DIR = config["paths"]["extracted_noaa_data"]   # Directory for extracted CSV files
+DELETE_SOURCE = config["noaa_data"]["delete_gz"]    # Boolean flag for deleting original .gz files after extraction
 
 # Ensure the extraction directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)

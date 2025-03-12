@@ -12,18 +12,18 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(PROJECT_ROOT)
 
-from utils.logger_helper import setup_loggers  # Handles log file and console logging
-from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
+from utils.logger_helper import setup_loggers   # Handles log file and console logging
+from utils.config_loader import load_yaml_files # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
 CONFIG_FILES = ["config/paths.yaml", "config/data.yaml"]  # Add all your YAML files
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract flight data settings
-SOURCE_DIR = config["paths"]["extracted_flight_data"] # Raw flight data directory
-KEEP_COLUMNS = config["flight_data"]["keep_columns"] # Columns to keep
-SAVE_DIR = config["paths"]["processed_flight_data"] # Directory to save cleaned data
-DELETE_SOURCE = config["flight_data"]["delete_pq"] # Delete source Parquet files after processing
+SOURCE_DIR = config["paths"]["extracted_flight_data"]   # Raw flight data directory
+KEEP_COLUMNS = config["flight_data"]["keep_columns"]    # Columns to keep
+SAVE_DIR = config["paths"]["processed_flight_data"]     # Directory to save cleaned data
+DELETE_SOURCE = config["flight_data"]["delete_pq"]      # Delete source Parquet files after processing
 
 # Ensure the clean directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -129,10 +129,16 @@ def add_working_indicator(df):
     df['Working_Day'] = np.where((df['Weekend_Indicator'] == 1) | (df['Holiday_Indicator'] == 1), 0, 1)
     return df
 
-
 # ─── Flight Data Cleaning Function ───────────────────────────────────────────
 def clean_flight_file(file_path, progress, task_id):
-    """Processes a single flight data file: cleans, categorizes, and saves."""
+    """
+    Processes a single flight data file: cleans, categorizes, and saves.
+    
+    Args:
+        file_path (str): Path to the raw flight parquet file.
+        progress (Progress): Shared progress instance.
+        task_id (int): The task ID for updating the spinner status.
+    """
     filename = os.path.basename(file_path)
     year_str = filename.replace("extracted_flight_", "").replace(".parquet", "")
     save_path = os.path.join(SAVE_DIR, f"processed_flight_{year_str}.parquet")
@@ -152,7 +158,6 @@ def clean_flight_file(file_path, progress, task_id):
         steps = [
             ("applying undersampling", undersample_delays),
             ("converting flight date", convert_flight_date),
-            # ("categorizing delay severity", categorize_delay),
             ("categorizing airtime duration", categorize_airtime),
             ("categorizing flight distance", categorize_distance),
             ("categorizing time of day", categorize_time_of_day),

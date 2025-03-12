@@ -39,8 +39,8 @@ rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
 # ─── Training Function ───────────────────────────────────────────────────────
 def train_model(model_name, base=False):
-    """Trains the specified model using configuration from the YAML file.
-    
+    """
+    Trains the specified model using configuration from the YAML file.
     If `base=True`, the model is trained with default settings (no hyperparameters except `random_state=42` where applicable).
     """
     data = pd.read_parquet(SOURCE_PATH)
@@ -98,7 +98,7 @@ def train_model(model_name, base=False):
         train_task = progress.add_task(f"Training {model_name} ({mode_label})...")
         file_logger.info(f"Training {model_name} ({mode_label})...")
 
-        # Capture warnings (e.g., max iterations reached) and log them
+        # Capture warnings and log them
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             try:

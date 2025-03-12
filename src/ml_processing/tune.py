@@ -95,10 +95,10 @@ def train_model_with_tuning(model_name):
     file_logger.info(f"Total possible hyperparameter combinations: {total_param_space}")
     file_logger.info(f"Randomly sampling {total_samples} hyperparameter sets for tuning")
     
-    # Log planned runs before training starts
-    file_logger.info("All possible hyperparameter combinations:")
-    for i, params in enumerate(param_combinations):
-        file_logger.info(f"  [{i+1}/{total_param_space}] {params}")
+    # # Log planned runs before training starts
+    # file_logger.info("All possible hyperparameter combinations:")
+    # for i, params in enumerate(param_combinations):
+    #     file_logger.info(f"  [{i+1}/{total_param_space}] {params}")
     
     print("--VERBOSE OUTPUT BEGIN--")
 
@@ -106,7 +106,7 @@ def train_model_with_tuning(model_name):
         warnings.simplefilter("always")
         try:
             grid_search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=total_samples, cv=5, n_jobs=-1, verbose=3, random_state=42)
-            grid_search.fit(X, y)  # Let verbose print naturally to terminal
+            grid_search.fit(X, y)  # Will let verbose print to terminal, not captured
             print("--VERBOSE OUTPUT END--")
         except Exception as e:
             rich_logger.error(f"Tuning failed for {model_name}: {e}")
@@ -121,12 +121,25 @@ def train_model_with_tuning(model_name):
     # Resume structured logging after training
     rich_logger.info(f"Best parameters found: {grid_search.best_params_}")
     file_logger.info(f"Best parameters found: {grid_search.best_params_}")
+
+
+    # Convert cv_results_ to a DataFrame for better readability
+    cv_results_df = pd.DataFrame(grid_search.cv_results_)
+
+    # Select relevant columns (parameters and mean test scores)
+    param_columns = [col for col in cv_results_df.columns if col.startswith("param_")]
+    results_df = cv_results_df[param_columns + ["mean_test_score"]]
+
+    # Log all searched parameters and their scores
+    rich_logger.info(f"All parameters searched and their scores:\n{results_df.to_string(index=False)}")
+    file_logger.info(f"All parameters searched and their scores:\n{results_df.to_string(index=False)}")
+    
     
     # Create model-specific folder
     model_dir = os.path.join(SAVE_DIR, model_name)
     os.makedirs(model_dir, exist_ok=True)
 
-    # Save full grid search object and best model
+    # Save full grid search object
     gridsearch_filename = f"{model_name}_all_tuned.pkl"
     gridsearch_path = os.path.join(model_dir, gridsearch_filename)
     with open(gridsearch_path, "wb") as f:
@@ -135,13 +148,14 @@ def train_model_with_tuning(model_name):
     rich_logger.info(f"Full grid search object saved to {gridsearch_path}")
     file_logger.info(f"Full grid search object saved to {gridsearch_path}")
     
-    model_filename = f"{model_name}_best_tuned.pkl"
-    model_path = os.path.join(model_dir, model_filename)
-    with open(model_path, "wb") as f:
-        pickle.dump(grid_search.best_estimator_, f)
+    # # Save the best model
+    # model_filename = f"{model_name}_best_tuned.pkl"
+    # model_path = os.path.join(model_dir, model_filename)
+    # with open(model_path, "wb") as f:
+    #     pickle.dump(grid_search.best_estimator_, f)
     
-    rich_logger.info(f"Tuned model saved to {model_path}")
-    file_logger.info(f"Tuned model saved to {model_path}")
+    # rich_logger.info(f"Tuned model saved to {model_path}")
+    # file_logger.info(f"Tuned model saved to {model_path}")
 
 # ─── Main Execution ──────────────────────────────────────────────────────────
 if __name__ == "__main__":

@@ -9,8 +9,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(PROJECT_ROOT)
 
-from utils.logger_helper import setup_loggers
-from utils.config_loader import load_yaml_files
+from utils.logger_helper import setup_loggers   # Handles log file and console logging
+from utils.config_loader import load_yaml_files # Loads configuration settings from YAML files
 
 # ─── Setup Loggers ───────────────────────────────────────────────────────────
 LOG_FILENAME = "flight_download"
@@ -21,9 +21,9 @@ CONFIG_FILES = ["config/paths.yaml", "config/data.yaml"]
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract key configuration values
-SOURCE_URL = config["flight_data"]["kaggle"]  # List of Kaggle datasets to download
+SOURCE_URL = config["flight_data"]["kaggle"]    # List of Kaggle datasets to download
 YEARS = config["overall"]["years"]              # List of years to download
-SAVE_DIR = config["paths"]["raw_flight_data"]  # Directory to save Kaggle datasets
+SAVE_DIR = config["paths"]["raw_flight_data"]   # Directory to save Kaggle datasets
 
 # Ensure save directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
     with Progress(
         SpinnerColumn(),
-        TextColumn("{task.description}"),  # Task description
+        TextColumn("{task.description}"),
     ) as progress:
         with ThreadPoolExecutor() as executor:
             futures = {}

@@ -11,8 +11,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")
 sys.path.append(PROJECT_ROOT)
 
 # Import logging and configuration utilities
-from utils.logger_helper import setup_loggers  # Handles log file and console logging
-from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
+from utils.logger_helper import setup_loggers   # Handles log file and console logging
+from utils.config_loader import load_yaml_files # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
 # Load relevant configuration files
@@ -88,7 +88,6 @@ if __name__ == "__main__":
 
             # Submit download tasks and track them with progress bar
             for year in YEARS:
-                # task_id = progress.add_task(f"Downloading {year}.csv.gz...", total=0)  # Initialize task
                 task_id = progress.add_task(f"Downloading {year}.csv.gz...")
                 futures[executor.submit(download_file, year, progress, task_id)] = year
 

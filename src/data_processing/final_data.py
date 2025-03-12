@@ -12,19 +12,19 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(PROJECT_ROOT)
 
-from utils.logger_helper import setup_loggers  # Handles log file and console logging
-from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
+from utils.logger_helper import setup_loggers   # Handles log file and console logging
+from utils.config_loader import load_yaml_files # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
 CONFIG_FILES = ["config/paths.yaml", "config/data.yaml"]  # Add all YAML files here
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract paths and settings from configuration
-FLIGHT_DIR = config["paths"]["processed_flight_data"]
-WEATHER_DIR = config["paths"]["processed_noaa_data"]
-SAVE_DIR = config["paths"]["final_by_year"]
-YEARS = config["overall"]["years"]
-DELETE_SOURCE_FILES = config["final_data"]["delete_processed"]
+FLIGHT_DIR = config["paths"]["processed_flight_data"]           # Processed flight data dictionary
+WEATHER_DIR = config["paths"]["processed_noaa_data"]            # Processed NOAA data dictionary
+SAVE_DIR = config["paths"]["final_by_year"]                     # Final save directory
+YEARS = config["overall"]["years"]                              # Years to process
+DELETE_SOURCE_FILES = config["final_data"]["delete_processed"]  # Optional deletion of source data to save space
 
 # Ensure output directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -35,7 +35,14 @@ rich_logger, file_logger = setup_loggers(LOG_FILENAME)
 
 # ─── Helper Functions ────────────────────────────────────────────────────────
 def merge_flight_weather(year, progress, task_id):
-    """Merges flight data with corresponding weather data for a given year."""
+    """
+    Merges flight data with corresponding weather data for a given year.
+    
+    Args:
+        year (int): Year to process.
+        progress (Progress): Shared progress instance.
+        task_id (int): The task ID for updating the spinner status.
+    """
     flight_file = os.path.join(FLIGHT_DIR, f"processed_flight_{year}.parquet")
     weather_file = os.path.join(WEATHER_DIR, f"processed_noaa_{year}.parquet")
 
@@ -181,9 +188,6 @@ def add_rolling_averages_weather(df):
 
 def add_rolling_averages_delays(df, columns=['DepDelayMinutes'], windows={'weekly': 7, 'monthly': 30}):
     """Compute rolling averages in Pandas and use DuckDB for faster merging."""
-    
-    # Ensure FlightDate is in datetime format
-    # df['FlightDate'] = pd.to_datetime(df['FlightDate'])
 
     # Step 1: Aggregate to daily means per Origin
     daily_avg = df.groupby(['Origin', 'FlightDate'])[columns].mean().reset_index()
@@ -226,7 +230,6 @@ def add_rolling_flight_avg(df, column='DepDelayMinutes', windows=[10, 50, 100]):
     
     # Optimize memory usage
     df['Origin'] = df['Origin'].astype('category')
-    # df['FlightDate'] = pd.to_datetime(df['FlightDate'])  # Ensure it's in datetime format
 
     # Sort by Origin, FlightDate, and TimeSinceMidnight for proper chronological order
     df.sort_values(by=['Origin', 'FlightDate', 'CRSDepTime'], inplace=True)
@@ -240,6 +243,7 @@ def add_rolling_flight_avg(df, column='DepDelayMinutes', windows=[10, 50, 100]):
         )
 
     df['Origin'] = df['Origin'].astype(str)
+
     return df
 
 def add_cumulative_flight_count(df):

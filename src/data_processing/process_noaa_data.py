@@ -11,8 +11,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")
 sys.path.append(PROJECT_ROOT)
 
 # Import logging and configuration utilities
-from utils.logger_helper import setup_loggers  # Handles log file and console logging
-from utils.config_loader import load_yaml_files  # Loads configuration settings from YAML files
+from utils.logger_helper import setup_loggers   # Handles log file and console logging
+from utils.config_loader import load_yaml_files # Loads configuration settings from YAML files
 
 # ─── Load Configuration ──────────────────────────────────────────────────────
 # Load configuration files
@@ -20,12 +20,12 @@ CONFIG_FILES = ["config/paths.yaml", "config/data.yaml"]
 config = load_yaml_files(CONFIG_FILES)
 
 # Extract settings from configuration
-SOURCE_DIR = config["paths"]["extracted_noaa_data"]  # Directory with raw NOAA data
-STATION_KEY_PATH = config["paths"]["airport_station_data"]  # Path to station-airport mapping CSV
-CORE_ELEMENTS = set(config["noaa_data"]["elements"])  # Elements to retain
-ZERO_OUT_ELEMENTS = set(config["noaa_data"]["zero_out_elements"])  # Elements where NaN should be replaced with 0
-SAVE_DIR = config["paths"]["processed_noaa_data"]  # Directory for saving cleaned data
-DELETE_SOURCE = config["noaa_data"]["delete_csv"]  # Whether to delete original CSV files after processing
+SOURCE_DIR = config["paths"]["extracted_noaa_data"]                 # Directory with raw NOAA data
+STATION_KEY_PATH = config["paths"]["airport_station_data"]          # Path to station-airport mapping CSV
+CORE_ELEMENTS = set(config["noaa_data"]["elements"])                # Elements to retain
+ZERO_OUT_ELEMENTS = set(config["noaa_data"]["zero_out_elements"])   # Elements where NaN should be replaced with 0
+SAVE_DIR = config["paths"]["processed_noaa_data"]                   # Directory for saving cleaned data
+DELETE_SOURCE = config["noaa_data"]["delete_csv"]                   # Whether to delete original CSV files after processing
 
 # Ensure output directory exists
 os.makedirs(SAVE_DIR, exist_ok=True)
@@ -48,12 +48,9 @@ def clean_noaa_file(file_path, progress, task_id):
     replacing station IDs with airport codes, and saving as a Parquet file.
 
     Args:
-        file_path (str): Path to the raw NOAA CSV file.
+        file_path (str): Path to the raw NOAA csv file.
         progress (Progress): Shared progress instance.
         task_id (int): The task ID for updating the spinner status.
-    
-    Returns:
-        str: Path to the cleaned Parquet file (if successful), or None if the file was missing.
     """
     filename = os.path.basename(file_path)  # Extract filename
     year = filename.replace("extracted_noaa_", "").replace(".csv", "")  # Extract year from filename
@@ -61,7 +58,6 @@ def clean_noaa_file(file_path, progress, task_id):
 
     try:
         # Log processing start
-        # rich_logger.info(f"Started processing {filename}...")
         file_logger.info(f"Loading {filename}...")
         progress.update(task_id, description=f"Loading {filename}...")
 
@@ -148,7 +144,7 @@ if __name__ == "__main__":
     rich_logger.info(f"Starting NOAA data processing")
     file_logger.info(f"Starting NOAA data processing")
     
-    # Get all CSV files in the extracted directory
+    # Get all csv files in the extracted directory
     raw_files = [os.path.join(SOURCE_DIR, f) for f in os.listdir(SOURCE_DIR) if f.endswith(".csv")]
 
     if not raw_files:
