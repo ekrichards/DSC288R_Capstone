@@ -182,6 +182,7 @@ data/obsolete
 *.log
 
 # Pickle file models
+models/obsolete
 *.pkl
 
 # Kaggle Token

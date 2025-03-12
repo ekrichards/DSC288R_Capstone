@@ -125,7 +125,7 @@ def train_model(model_name, base=False):
     save_task = progress.add_task(f"Saving {model_name} ({mode_label}) model...")
     file_logger.info(f"Saving {model_name} ({mode_label}) model...")
     
-    model_suffix = "_base" if base else ""
+    model_suffix = "_base" if base else "_tuned"
     model_filename = f"{model_name}{model_suffix}.pkl"
     model_path = os.path.join(model_dir, model_filename)
     

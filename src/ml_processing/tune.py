@@ -134,13 +134,13 @@ def train_model_with_tuning(model_name):
     rich_logger.info(f"All parameters searched and their scores:\n{results_df.to_string(index=False)}")
     file_logger.info(f"All parameters searched and their scores:\n{results_df.to_string(index=False)}")
     
-    
+
     # Create model-specific folder
     model_dir = os.path.join(SAVE_DIR, model_name)
     os.makedirs(model_dir, exist_ok=True)
 
     # Save full grid search object
-    gridsearch_filename = f"{model_name}_all_tuned.pkl"
+    gridsearch_filename = f"{model_name}_random_search.pkl"
     gridsearch_path = os.path.join(model_dir, gridsearch_filename)
     with open(gridsearch_path, "wb") as f:
         pickle.dump(grid_search, f)
