@@ -35,6 +35,22 @@ and activate it
 6. run ```make data``` in the terminal
 
 
-![A7865B96-5C07-4F7A-849F-D94577F1937C](https://github.com/user-attachments/assets/d855bb70-ece4-41c3-b5c6-d22d402f70a8)
+# Data Card
 
-![5A3C049B-1AE3-4839-9821-633FF82C7F33](https://github.com/user-attachments/assets/5a6ef21e-37a7-4adb-b314-37dc331733e6)
+![1E2173F6-1C6C-4C6E-A874-AB70C019C1F9](https://github.com/user-attachments/assets/3567a48b-3445-4ebd-83af-9583c05b146c)
+
+
+# Model Cards
+
+![4891DAF5-41C1-469B-B5BD-5FDACA650421](https://github.com/user-attachments/assets/8f259d50-d5bc-427f-b6d4-be019a7a5f90)
+
+![4891DAF5-41C1-469B-B5BD-5FDACA650421](https://github.com/user-attachments/assets/2dfe9972-243e-4207-b992-f5794ee4e62d)
+
+![894A7126-5DD6-408F-9EFC-0C4DE811CBBE](https://github.com/user-attachments/assets/a4d28ad2-6356-4167-9ed1-0bf2abb3b7ab)
+
+![C3C9A85B-5CB9-4F22-9678-26454694BDAF](https://github.com/user-attachments/assets/2853ba27-be16-4778-a65a-afd23a239e62)
+
+
+
+
+
