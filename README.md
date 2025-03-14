@@ -79,10 +79,10 @@ The code is split into 2 main sections, the pipeline and the notebooks. The pipe
             - `hgb_reg` for [Histogram Gradient Boosting Regressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingRegressor.html)
             - `mlp_reg` for [Multi-Layer Perceptron Regressor](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
             - `reg` for all regression models
-            - `log_reg` for [Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
-            - `sgd_reg` for [Stochastic Gradient Descent Classifier](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html)
-            - `hgb_reg` for [Histogram Gradient Boosting Classifier](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html)
-            - `mlp_reg` for [Multi-Layer Perceptron Classifier](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html)
+            - `log_clf` for [Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
+            - `sgd_clf` for [Stochastic Gradient Descent Classifier](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html)
+            - `hgb_clf` for [Histogram Gradient Boosting Classifier](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html)
+            - `mlp_clf` for [Multi-Layer Perceptron Classifier](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html)
             - `clf` for all classifier models
 
 *Important Note: The entire pipeline can take up to 4 hours to run so plan accordingly.*
@@ -98,6 +98,7 @@ DSC288R_Capstone/
 ```
 2. Run `Classification.ipynb` for classification model results
 3. Run `Regression.ipynb` for regression model results
+4. Run `EDA.ipynb` for EDA performed
 
 *Important Note: We use imputation importance to determine feature importance, these last cells can take 15 minutes to run.*
 
