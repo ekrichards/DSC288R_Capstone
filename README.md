@@ -159,5 +159,3 @@ DSC288R_Capstone/
 
 <img width="559" alt="image" src="https://github.com/user-attachments/assets/9d554d3a-6e30-4016-9679-08ff14cf064c" />
 
-<img width="470" alt="image" src="https://github.com/user-attachments/assets/ad5eeb7f-7872-447a-b7e6-8bf223f19c87" />
-
