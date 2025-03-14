@@ -39,7 +39,7 @@ Before setting up the environment, make sure you have the following:
 3. Activate your new environment using the anaconda navigator or `conda activate DSC288R_Capstone_Group09`
 
 # Cloning the Repository
-If you haven't already clone the project repository and navigate to the root directory:
+If you haven't already, clone the project repository and navigate to the root directory:
 ```
 git clone https://github.com/ekrichards/DSC288R_Capstone.git
 cd <PROJECT_DIRECTORY>
@@ -115,7 +115,7 @@ Due to the data set size and long training times, there is a chance that things 
 - Ensure you are using the correct package versions as described above.
 - `pip install` does not handle dependencies well, if you are finding package versioning incompatibility with your environment when running the code, please consider using conda.
 ### Download Files
-- If you cannot run the pipeline we have provided the completed training data, testing data, and models: https://drive.google.com/file/d/1DxrDst-ysqBzhPkIkGl5iFm7Z1CYPav3/view?usp=drive_link
+- If you cannot run the pipeline, we have provided the completed training data, testing data, and models: https://drive.google.com/file/d/1DxrDst-ysqBzhPkIkGl5iFm7Z1CYPav3/view?usp=drive_link
 - Place the parquet files within `DSC288R_Capstone/data/final`. It should look something like this:
 ```
 DSC288R_Capstone/
