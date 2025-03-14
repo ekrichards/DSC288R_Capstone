@@ -170,20 +170,24 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# DVC entries
-.dvc/
+# Data entries
 data/raw
 data/extracted
 data/processed
 data/final
 data/obsolete
 
+# Pipeline
+src/obsolete
+
 # Logging
 *.log
 
 # Pickle file models
 models/obsolete
-# *.pkl
 
 # Kaggle Token
 kaggle.json
+
+# MacOS files
+.DS_store
