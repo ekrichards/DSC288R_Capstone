@@ -158,5 +158,12 @@ DSC288R_Capstone/
 
 ![C3C9A85B-5CB9-4F22-9678-26454694BDAF](https://github.com/user-attachments/assets/2853ba27-be16-4778-a65a-afd23a239e62)
 
-<img width="559" alt="image" src="https://github.com/user-attachments/assets/9d554d3a-6e30-4016-9679-08ff14cf064c" />
+<img width="571" alt="image" src="https://github.com/user-attachments/assets/f297d0e3-8211-44ef-9871-17cf0ca3e2cd" />
+
+<img width="441" alt="image" src="https://github.com/user-attachments/assets/ed6e702a-f57c-4556-baeb-82615fb9948b" />
+
+<img width="481" alt="image" src="https://github.com/user-attachments/assets/2aeb7add-cfa2-4454-9ace-60216f19bec7" />
+
+
+
 
