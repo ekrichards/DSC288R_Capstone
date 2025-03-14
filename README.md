@@ -48,7 +48,7 @@ and activate it
 
 ![C3C9A85B-5CB9-4F22-9678-26454694BDAF](https://github.com/user-attachments/assets/2853ba27-be16-4778-a65a-afd23a239e62)
 
-<img width="561" alt="image" src="https://github.com/user-attachments/assets/0c9517b8-90f4-4950-9606-fe02f7691811" />
+
 
 
 
