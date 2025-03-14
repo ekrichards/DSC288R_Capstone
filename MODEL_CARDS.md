@@ -20,21 +20,21 @@
 
 ### Metrics:
 - **Performance Metrics:**
-  - Mean Absolute Error (MAE): 36.65 minutes.
-  - Root Mean Squared Error (RMSE): 72.99 minutes.
+  - Mean Absolute Error (MAE): 36.6 minutes.
+  - Root Mean Squared Error (RMSE): 73.0 minutes.
   - R2 Score: 0.06, suggesting poor fit due to non-linearity.
 - **Variation Approaches:** Performance varies depending on seasonal trends.
 
 ### Evaluation Data:
 - **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data.
 - **Motivation:** Improve delay prediction accuracy to assist scheduling.
-- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling.
+- **Preprocessing:** Categorical encoding, feature scaling, missing value imputation.
 
 ### Training Data:
 - **Details:**
   - Train-test split: 80%-20%.
   - Feature selection applied, but non-linearity remains a challenge.
-  - Alternative models (XGBoost, LightGBM) showed improved performance; good baseline.
+  - Alternative models (Histogram-Based Gradient Boosting Regression) showed improved performance; good baseline.
 
 ### Quantitative Analyses:
 - **Unitary Results:** Linear regression struggled with capturing non-linear trends.
@@ -66,22 +66,23 @@
 
 ### Metrics:
 - **Performance Metrics:**
-  - Mean Absolute Error (MAE): 36.8
-  - Root Mean Squared Error (RMSE): 73.11
+  - Mean Absolute Error (MAE): 36.6
+  - Root Mean Squared Error (RMSE): 73.1
   - R2 Score: 0.06
 - **Variation Approaches:** Evaluated across different years, airlines, and locations
 
 ### Evaluation Data:
 - **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data
 - **Motivation:** Improve delay prediction accuracy to assist scheduling
-- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling
+- **Preprocessing:** Categorical encoding, feature scaling, missing value imputation
 
 ### Training Data:
 - **Details:**
   - Train-test split: 80%-20%
+  - Feature selection applied, but non-linearity remains a challenge.
 
 ### Quantitative Analyses:
-- **Unitary Results:** The regression model struggled with capturing nonlinear trends in flight delays, heavily weighting past delay averages (past_50_avg_delay) while underutilizing other flight characteristics such as distance and airtime.
+- **Unitary Results:** The regression model struggled with capturing nonlinear trends in flight delays, heavily weighting past delay averages while underutilizing other flight characteristics such as distance and airtime.
 - **Intersectional Results:** Performance varied significantly depending on flight route and seasonality. Longer flights exhibited higher error margins, and flights scheduled during peak travel periods had less reliable predictions.
 
 ### Ethical Considerations:
@@ -110,15 +111,15 @@
 
 ### Metrics:
 - **Performance Metrics:**
-  - Mean Absolute Error (MAE): 36.23 minutes.
-  - Root Mean Squared Error (RMSE): 72.32 minutes.
-  - R2 Score: 0.08, suggesting poor fit.
+  - Mean Absolute Error (MAE): 35.7 minutes.
+  - Root Mean Squared Error (RMSE): 71.6 minutes.
+  - R2 Score: 0.10, suggesting poor fit.
 - **Variation Approaches:** Performance varies depending on seasonal trends.
 
 ### Evaluation Data:
 - **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data.
 - **Motivation:** Improve delay prediction accuracy to assist scheduling.
-- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling.
+- **Preprocessing:** Categorical encoding, feature scaling, missing value imputation.
 
 ### Training Data:
 - **Details:**
@@ -144,25 +145,25 @@
 - **License:** Open Source
 
 ### Intended Use:
-- **Primary Use:** Predicting the delay (in minutes) of a flight
-- **Primary Users:** Airlines, Airports, Passengers, Pilots
-- **Out-of-Scope Use Cases:** Not to be used for all predictions of delays
+- **Primary Use:** Predicting the delay (in minutes) of a flight.
+- **Primary Users:** Airlines, Airports, Passengers, Pilots.
+- **Out-of-Scope Use Cases:** Not to be used for all predictions of delays.
 
 ### Factors:
-- **Relevant Features:** Distance, Airtime, past flight delay trends, airline
-- **Evaluation Factors:** Predictive accuracy
+- **Relevant Features:** Distance, Airtime, past flight delay trends, airline.
+- **Evaluation Factors:** Predictive accuracy in delay estimation.
 
 ### Metrics:
 - **Performance Metrics:**
-  - Mean Absolute Error (MAE): 35.2
-  - Root Mean Squared Error (RMSE): 70.85
-  - R2 Score: 0.10
+  - Mean Absolute Error (MAE): 35.9
+  - Root Mean Squared Error (RMSE): 72.6
+  - R2 Score: 0.07
 - **Variation Approaches:** Evaluated across different years, airlines, and locations
 
 ### Evaluation Data:
-- **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data
-- **Motivation:** Improve delay prediction accuracy to assist scheduling
-- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling
+- **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data.
+- **Motivation:** Improve delay prediction accuracy to assist scheduling.
+- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling.
 
 ### Training Data:
 - **Details:**
@@ -198,9 +199,9 @@
 
 ### Metrics:
 - **Performance Metrics:**
-  - Accuracy: 0.64
+  - Accuracy: 0.65
   - Precision: 0.65
-  - Recall: 0.61
+  - Recall: 0.64
   - F1 Score: 0.65
 - **Decision Thresholds:** Standard binary threshold (0.5 probability split).
 - **Variation Approaches:** Evaluated across different years, airlines, and locations.
@@ -208,7 +209,7 @@
 ### Evaluation Data:
 - **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data.
 - **Motivation:** Improve delay prediction accuracy to assist scheduling.
-- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling.
+- **Preprocessing:** Categorical encoding, feature scaling, missing value imputation.
 
 ### Training Data:
 - **Details:**
@@ -234,33 +235,33 @@
 - **License:** Open Source
 
 ### Intended Use:
-- **Primary Use:** Predicting the delay of a flight
-- **Primary Users:** Airlines, Airports, Passengers, Pilots
-- **Out-of-Scope Use Cases:** Not to be used for all predictions of delays
+- **Primary Use:** Predicting the delay of a flight.
+- **Primary Users:** Airlines, Airports, Passengers, Pilots.
+- **Out-of-Scope Use Cases:** Not to be used for all predictions of delays.
 
 ### Factors:
-- **Relevant Features:** Distance, Airtime, and airline
-- **Evaluation Factors:** Predictive accuracy
+- **Relevant Features:** Distance, Airtime, and airline.
+- **Evaluation Factors:** Confusion Matrix, delay prediction accuracy.
 
 ### Metrics:
 - **Performance Metrics:**
   - Accuracy: 0.64
-  - Precision: 0.64
-  - Recall: 0.65
+  - Precision: 0.65
+  - Recall: 0.64
   - F1 Score: 0.65
 - **Variation Approaches:** Evaluated across different years, airlines, and locations
 
 ### Evaluation Data:
-- **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data
-- **Motivation:** Improve delay prediction accuracy to assist scheduling
-- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling
+- **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data.
+- **Motivation:** Improve delay prediction accuracy to assist scheduling.
+- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling.
 
 ### Training Data:
 - **Details:**
-  - Train-test split: 80%-20%
+  - Train-test split: 80%-20%.
 
 ### Quantitative Analyses:
-- **Unitary Results:** The model relied heavily on past delay trends (past_50_avg_delay) for predictions, indicating that historical delays play a stronger role than distance or airtime in forecasting delays.
+- **Unitary Results:** The model relied heavily on past delay trends for predictions, indicating that historical delays play a stronger role than distance or airtime in forecasting delays.
 - **Intersectional Results:** The model performed inconsistently across airlines, with some carriers experiencing higher misclassification rates. Time of day also impacted performance, as delays occurring later in the day were often underpredicted.
 
 ### Ethical Considerations:
@@ -289,7 +290,7 @@
 
 ### Metrics:
 - **Performance Metrics:**
-  - Accuracy: 0.66
+  - Accuracy: 0.67
   - Precision: 0.68
   - Recall: 0.64
   - F1 Score: 0.66
@@ -327,30 +328,30 @@
 - **License:** Open Source
 
 ### Intended Use:
-- **Primary Use:** Predicting the delay of a flight
-- **Primary Users:** Airlines, Airports, Passengers, Pilots
-- **Out-of-Scope Use Cases:** Not to be used for all predictions of delays
+- **Primary Use:** Predicting the delay of a flight.
+- **Primary Users:** Airlines, Airports, Passengers, Pilots.
+- **Out-of-Scope Use Cases:** Not to be used for all predictions of delays.
 
 ### Factors:
-- **Relevant Features:** Distance, Airtime, past flight delay trends, airline
-- **Evaluation Factors:** Predictive accuracy
+- **Relevant Features:** Distance, Airtime, past flight delay trends, airline.
+- **Evaluation Factors:** Predictive accuracy.
 
 ### Metrics:
 - **Performance Metrics:**
-  - Accuracy: 0.67
-  - Precision: 0.68
-  - Recall: 0.66
-  - F1 Score: 0.67
-- **Variation Approaches:** Evaluated across different years, airlines, and locations
+  - Accuracy: 0.66
+  - Precision: 0.67
+  - Recall: 0.63
+  - F1 Score: 0.65
+- **Variation Approaches:** Evaluated across different years, airlines, and locations.
 
 ### Evaluation Data:
-- **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data
-- **Motivation:** Improve delay prediction accuracy to assist scheduling
-- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling
+- **Datasets:** Kaggle Flight Delay Dataset (2018-2022), NOAA Weather Data.
+- **Motivation:** Improve delay prediction accuracy to assist scheduling.
+- **Preprocessing:** Missing value imputation, categorical encoding, feature scaling.
 
 ### Training Data:
 - **Details:**
-  - Train-test split: 80%-20%
+  - Train-test split: 80%-20%.
 
 ### Quantitative Analyses:
 - **Unitary Results:** The model captured non-linear relationships in delay prediction better than simpler classifiers, leveraging flight history and timing patterns effectively.
