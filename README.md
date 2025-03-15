@@ -1,7 +1,7 @@
 # DSC288R_Capstone
 Flight status prediction based on historical flight data.
 
-Model and data cards are available in the MODEL_CARDS.md and DATA_CARD.md mardown files respectively.
+Model and data cards are available in the MODEL_CARDS.md and DATA_CARD.md markdown files respectively.
 
 # Prerequisites
 Before setting up the environment, make sure you have the following:
