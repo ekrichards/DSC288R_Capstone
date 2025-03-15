@@ -1,6 +1,8 @@
 # DSC288R_Capstone
 Flight status prediction based on historical flight data.
 
+Model and data cards are available in the MODEL_CARDS.md and DATA_CARD.md mardown files respectively.
+
 # Prerequisites
 Before setting up the environment, make sure you have the following:
 1. 32GB of memory and up to 16 cores
@@ -144,26 +146,3 @@ DSC288R_Capstone/
 - You should now be able to run the notebooks.
 
 *Important Note: You will still need sufficient memory to run the models this way.*
-
-# Data Card
-
-![3EE1091A-8107-484B-BDEF-B7CD61B7E47C_1_105_c](https://github.com/user-attachments/assets/d779c9c5-5347-476c-a104-9ee936a3896e)
-
-
-# Model Cards
-
-![4891DAF5-41C1-469B-B5BD-5FDACA650421](https://github.com/user-attachments/assets/8f259d50-d5bc-427f-b6d4-be019a7a5f90)
-
-![894A7126-5DD6-408F-9EFC-0C4DE811CBBE](https://github.com/user-attachments/assets/a4d28ad2-6356-4167-9ed1-0bf2abb3b7ab)
-
-![C3C9A85B-5CB9-4F22-9678-26454694BDAF](https://github.com/user-attachments/assets/2853ba27-be16-4778-a65a-afd23a239e62)
-
-<img width="571" alt="image" src="https://github.com/user-attachments/assets/f297d0e3-8211-44ef-9871-17cf0ca3e2cd" />
-
-<img width="441" alt="image" src="https://github.com/user-attachments/assets/ed6e702a-f57c-4556-baeb-82615fb9948b" />
-
-<img width="481" alt="image" src="https://github.com/user-attachments/assets/2aeb7add-cfa2-4454-9ace-60216f19bec7" />
-
-
-
-
